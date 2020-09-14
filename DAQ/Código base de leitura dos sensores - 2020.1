@@ -60,11 +60,25 @@ static const uint8_t PWR_MGMT_1 = 0x6B ;
 static const uint8_t CNTL1 = 0x0A ;
 static const uint8_t ACE_XOUT_H = 0x3B ;
 static const uint8_t MAG_XOUT_L = 0x03 ;
-static const uint8_t MAG_ASAX = 0x10 ;
 static const uint8_t TEMP_CONTROL_REG_AD = 0x2E ;//Endereço do "control register" da temperatura; pag.21 do datasheet
 static const uint8_t PRE_CONTROL_REG_AD = 0xB4 ;//Endereço do "control register" da pressão; pag.21 do datasheet
 static const uint8_t BMP_REG_AD = 0xF4 ;//Endereço do "register"; pag.21 do datasheet
 static const uint8_t AC1_MSB = 0xAA ;//Endereço do msb do primeiro valor do e2prom; pag.13 do datasheet
+static const uint8_t XG_OFFSET_H = 0x13 ; //Endereço dos registradores de offset do giroscópio; register map - p. 7
+static const uint8_t XG_OFFSET_L = 0x14 ;
+static const uint8_t YG_OFFSET_H = 0x15 ;
+static const uint8_t YG_OFFSET_L = 0x16 ;
+static const uint8_t ZG_OFFSET_H = 0x17 ;
+static const uint8_t ZG_OFFSET_L = 0x18 ;
+static const uint8_t XA_OFFSET_H = 0x77 ; //Endereço dos registradores de offset do acelerômetro; register map - p. 9
+static const uint8_t XA_OFFSET_L = 0x78 ;
+static const uint8_t YA_OFFSET_H = 0x7A ;
+static const uint8_t YA_OFFSET_L = 0x7B ;
+static const uint8_t ZA_OFFSET_H = 0x7C ;
+static const uint8_t ZA_OFFSET_L = 0x7D ;
+static const uint8_t MAG_ASAX = 0x10 ; //Endereço dos registradores de ajuste de sensibilidade; register map - p. 47
+static const uint8_t MAG_ASAY = 0x11 ;
+static const uint8_t MAG_ASAZ = 0x12 ;
 
 /* USER CODE END PV */
 
