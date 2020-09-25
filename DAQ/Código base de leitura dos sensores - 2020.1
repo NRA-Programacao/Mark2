@@ -60,10 +60,10 @@ static const uint8_t PWR_MGMT_1 = 0x6B ;
 static const uint8_t CNTL1 = 0x0A ;
 static const uint8_t ACE_XOUT_H = 0x3B ;
 static const uint8_t MAG_XOUT_L = 0x03 ;
-static const uint8_t TEMP_CONTROL_REG_AD = 0x2E ;//Endereço do "control register" da temperatura; pag.21 do datasheet
-static const uint8_t PRE_CONTROL_REG_AD = 0xB4 ;//Endereço do "control register" da pressão; pag.21 do datasheet
-static const uint8_t BMP_REG_AD = 0xF4 ;//Endereço do "register"; pag.21 do datasheet
-static const uint8_t AC1_MSB = 0xAA ;//Endereço do msb do primeiro valor do e2prom; pag.13 do datasheet
+static const uint8_t TEMP_CONTROL_REG_AD = 0x2E ; //Endereço do "control register" da temperatura; pag.21 do datasheet
+static const uint8_t PRE_CONTROL_REG_AD = 0xB4 ; //Endereço do "control register" da pressão; pag.21 do datasheet
+static const uint8_t BMP_REG_AD = 0xF4 ; //Endereço do "register"; pag.21 do datasheet
+static const uint8_t AC1_MSB = 0xAA ; //Endereço do msb do primeiro valor do e2prom; pag.13 do datasheet
 static const uint8_t XG_OFFSET_H = 0x13 ; //Endereço dos registradores de offset do giroscópio; register map - p. 7
 static const uint8_t XG_OFFSET_L = 0x14 ;
 static const uint8_t YG_OFFSET_H = 0x15 ;
@@ -113,7 +113,7 @@ int main(void)
 
 	const float aRes = 8.0 / 32768.0;
 	const float gRes = 1000.0 / 32768.0;
-	float ax, ay, az, gx, gy, gz, t, mx, my, mz, Temp;
+	float ax, ay, az, gx, gy, gz, t, mx, my, mz, Temp, ax_off, ay_off, az_off, gx_off, gy_off, gz_off, mx_off, my_off, mz_off;
 	long int UT, UP, X1, X2, X3, B3, B4, B5, B6, B7, P;
 	int j, k;
 
@@ -125,6 +125,7 @@ int main(void)
 	//Configurações Giroscópio
 	buf[0] = GIR_CONFIG_AD;
 	buf[1] = 0x11; // Configura o range para +-1000 dps e Fchoice 01
+	fs_sel = 2;
 	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
 	buf[0] = PWR_MGMT_1;
 	buf[2] = 0x01 ; // Define a referência do clock como o eixo x
@@ -193,6 +194,82 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+  	//LEITURA OFFSET
+	
+	//GIROSCÓPIO - ORDEM - X, Y, Z
+	buf[0] = XG_OFFSET_H ;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100) ;
+	if (ret != HAL_OK){
+		strcpy((char*)msg,"Error Tx\r\n") ;
+	}
+	else{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100) ;
+		if (ret != HAL_OK){
+			strcpy((char*)msg,"Error Rx\r\n") ;
+		}
+		else{
+			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]) ;  // Turn the MSB and LSB into a signed 16-bit value
+			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]) ;
+			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]) ;
+			
+			gx_off = data[0] * gRes;
+			gy_off = data[0] * gRes;
+			gz_off = data[0] * gRes;
+			
+			sprintf((char*)msg,"gx_off=%f  gy_off=%f  gz_off=%f  [degrees/s]", gx_off,gy_off,gz_off);
+		}
+	}
+			
+	//ACELERÔMETRO - ORDEM - X, Y, Z
+	buf[0] = XA_OFFSET_H ;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100) ;
+	if (ret != HAL_OK){
+		strcpy((char*)msg,"Error Tx\r\n") ;
+	}
+	else{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100) ;
+		if (ret != HAL_OK){
+			strcpy((char*)msg,"Error Rx\r\n") ;
+		}
+		else{
+			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]) ;  // Turn the MSB and LSB into a signed 16-bit value
+			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]) ;
+			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]) ;
+			
+			ax_off = data[0] * aRes;
+			ay_off = data[0] * aRes;
+			az_off = data[0] * aRes;
+			
+			sprintf((char*)msg,"ax_off=%f  ay_off=%f  az_off=%f  [degrees/s]", ax_off,ay_off,az_off);
+		}
+	}
+			
+			
+				
+	//MAGNETÔMETRO - ORDEM - X, Y, Z
+	buf[0] = MAG_ASAX ;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100) ;
+	if (ret != HAL_OK){
+		strcpy((char*)msg,"Error Tx\r\n") ;
+	}
+	else{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100) ;
+		if (ret != HAL_OK){
+			strcpy((char*)msg,"Error Rx\r\n") ;
+		}
+		else{
+			data[0] = (float) buf[0] ; 
+			data[1] = (float) buf[2] ;
+			data[2] = (float) buf[4] ;
+			
+			mx = (float) data[0] *((magSensi[0] - 128)*0.5/128 + 1);
+			my = (float) data[1] *((magSensi[1] - 128)*0.5/128 + 1);
+			mz = (float) data[2] *((magSensi[2] - 128)*0.5/128 + 1);
+
+			sprintf((char*)msg,"mx_off=%f   my_off=%f   mz_off=%f\r\n",mx_off,my_off,mz_off);
+		}
+	}
+				
 	//Leitura do acelerômetro, termômetro e giroscópio
 	buf[0] = ACE_XOUT_H;
 	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100);
