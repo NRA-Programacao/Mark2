@@ -121,4 +121,34 @@ void confMag (uint8_t * buf, uint8_t M1, uint8_t M2, uint8_t M3)
 		default: return 01100101 01110010 01110010 01101111;
 	 }
  }
+
+ float adjMagnet (char s) //essa função só retorna o fator que multiplicado pela leitura do magnetômetro resulta no adjustment
+ {
+	buf[0] = MAG_ASAX ;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100) ;
+	if (ret != HAL_OK){
+		strcpy((char*)msg,"Error Tx\r\n") ;
+	}
+	else{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100) ;
+		if (ret != HAL_OK){
+			strcpy((char*)msg,"Error Rx\r\n") ;
+		}
+		else{
+			data[0] = (float) buf[0] ; 
+			data[1] = (float) buf[2] ;
+			data[2] = (float) buf[4] ;
+			
+			mx_adj = (float) (data[0]-128)/256 + 1.
+			my_adj = (float) (data[1]-128)/256 + 1. 
+			mz_adj = (float) (data[2]-128)/256 + 1.
+
+			sprintf((char*)msg,"mx_adj=%f*Hx   my_adj=%f*Hy  mz_adj=%f*Hz\r\n",mx_adj,my_adj,mz_adj);
+		}
+	}
+	case x: return mx_adj;
+	case y: return my_adj;
+	case z: return mz_adj;
+	default: return 01100101 01110010 01110010 01101111;
+ }
 	 
