@@ -262,11 +262,11 @@ int main(void)
 			data[1] = (float) buf[2] ;
 			data[2] = (float) buf[4] ;
 			
-			mx = (float) data[0] *((magSensi[0] - 128)*0.5/128 + 1);
-			my = (float) data[1] *((magSensi[1] - 128)*0.5/128 + 1);
-			mz = (float) data[2] *((magSensi[2] - 128)*0.5/128 + 1);
+			mx_adj = (float) (data[0]-128)/256 + 1.
+			my_adj = (float) (data[1]-128)/256 + 1. 
+			mz_adj = (float) (data[2]-128)/256 + 1.
 
-			sprintf((char*)msg,"mx_off=%f   my_off=%f   mz_off=%f\r\n",mx_off,my_off,mz_off);
+			sprintf((char*)msg,"mx_adj=%f*Hx   my_adj=%f*Hy  mz_adj=%f*Hz\r\n",mx_adj,my_adj,mz_adj);
 		}
 	}
 				
