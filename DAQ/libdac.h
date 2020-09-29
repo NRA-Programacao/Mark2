@@ -45,6 +45,33 @@ extern void confMag (uint8_t * buf, uint8_t M1, uint8_t M2, uint8_t M3)
 /*??*/	magSensi[2] = (float) buf[2];
   }
   
+extern void confgMPU (uint8_t * buf, uint8_t A1, uint8_t G1, uint8_t G2, uint8_t M1, uint8_t M2, uint8_t M3)
+{
+	//Confg Acel
+	buf[0] = A1; //ACE_CONFIG_AD
+	buf[1] = 0x10; // 0x10 configura o range para +-8g
+	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
+	
+	//Confg Giro
+	buf[0] = G1; //GIR_CONFIG_AD
+	buf[1] = 0x11; // Configura o range para +-1000 dps e Fchoice 01
+	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
+	buf[0] = G2; //PWR_MGMT_1
+	buf[2] = 0x01 ; // Define a referência do clock como o eixo x
+	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
+	
+	//Confg Mag
+	buf[0] = M1 ; //INT_BYPASS_CONFIG
+	buf[1] = 0x02 ; // Liga o bypass multiplex
+	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
+	buf[0] = M2; //CNTL1
+	buf[1] = 0x1F;
+	HAL_I2C_Master_Transmit(&hi2c1, MAG_AD, buf, 2, 100);
+	buf[0] = M3; //MAG_ASAX
+	HAL_I2C_Master_Transmit(&hi2c1, MAG_AD, buf, 1, 100);
+	HAL_I2C_Master_Receive(&hi2c1, MAG_AD, buf, 3, 100); // Lendo a sensibilidade do magnetômetro
+}
+
   void confgBmp (uint8_t * buf, uint8_t B1, uint8_t B2, uint8_t B3, uint8_t B4)
   {
     	int j, k;
