@@ -1,23 +1,25 @@
 //inicialização da biblioteca 
+#ifndef LIBDAC_H
+#define LIBDAC_H
 #include "string.h"
 #include "stdio.h"
 
 //Variaveis globais
 long int B5;
-
+float ax_off, ay_off, az_off, mx_adj, my_adj, mz_adj;
 
 
 //Funçoes
 
 //Configuraçao: Acel, Giro, Mag, Bmp
-void confgAce (uint8_t * buf, uint8_t A1)
+extern void confgAce (uint8_t * buf, uint8_t A1)
 {
 	buf[0] = A1; //ACE_CONFIG_AD
 	buf[1] = 0x10; // 0x10 configura o range para +-8g
 	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
    }
 
-void confgGiro (uint8_t * buf, uint8_t G1, uint8_t G2)
+extern void confgGiro (uint8_t * buf, uint8_t G1, uint8_t G2)
 {
   	buf[0] = G1; //GIR_CONFIG_AD
 	buf[1] = 0x11; // Configura o range para +-1000 dps e Fchoice 01
@@ -27,7 +29,7 @@ void confgGiro (uint8_t * buf, uint8_t G1, uint8_t G2)
 	HAL_I2C_Master_Transmit(&hi2c1, MPU9250_AD, buf, 2, 100);
   }
   
-void confMag (uint8_t * buf, uint8_t M1, uint8_t M2, uint8_t M3)
+extern void confMag (uint8_t * buf, uint8_t M1, uint8_t M2, uint8_t M3)
 {
   	buf[0] = M1 ; //INT_BYPASS_CONFIG
 	buf[1] = 0x02 ; // Liga o bypass multiplex
@@ -61,73 +63,98 @@ void confMag (uint8_t * buf, uint8_t M1, uint8_t M2, uint8_t M3)
     }
 
 //Offset : Accel a Giro
- float offsetAccel (char s)
- {
-	buf[0] = XA_OFFSET_H ;
-	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100) ;
-	if (ret != HAL_OK){
-		strcpy((char*)msg,"Error Tx\r\n") ;
+extern void offsetAccel () //atribui a ax_off, ay_off, az_off os valores de offset dos registradores
+{
+	buf[0] = XA_OFFSET_H;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100);
+	if (ret != HAL_OK)
+	{
+		strcpy((char*)msg,"Error Tx\r\n");
 	}
 	else{
-		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100) ;
-		if (ret != HAL_OK){
-			strcpy((char*)msg,"Error Rx\r\n") ;
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100);
+		if (ret != HAL_OK)
+		{
+			strcpy((char*)msg,"Error Rx\r\n");
 		}
-		else{
-			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]) ;  // Turn the MSB and LSB into a signed 16-bit value
-			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]) ;
-			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]) ;
+		else
+		{
+			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]);  //concatena dois bytes
+			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]);
+			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]);
 			
 			ax_off = data[0] * aRes;
 			ay_off = data[0] * aRes;
 			az_off = data[0] * aRes;
 			
-			sprintf((char*)msg,"ax_off=%f  ay_off=%f  az_off=%f  [degrees/s]", ax_off,ay_off,az_off);
+			sprintf((char*)msg,"ax_off=%f  ay_off=%f  az_off=%f  [g]", ax_off,ay_off,az_off); //imprime no terminal os valores
 		}
 	}
-	 switch (s) {
-	 	case x: return ax_off;
-		case y: return ay_off;
-		case z: return az_off;
-		default: return 01100101 01110010 01110010 01101111;
-	 }
  }
 
- float offsetGyro (char s)
- {
-	buf[0] = XG_OFFSET_H ;
-	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100) ;
-	if (ret != HAL_OK){
-		strcpy((char*)msg,"Error Tx\r\n") ;
+extern void offsetGyro () //atribui a gx_off, gy_off, gz_off os valores de offset dos registradores
+{
+	buf[0] = XG_OFFSET_H;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100);
+	if (ret != HAL_OK)
+	{
+		strcpy((char*)msg,"Error Tx\r\n");
 	}
-	else{
-		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100) ;
-		if (ret != HAL_OK){
-			strcpy((char*)msg,"Error Rx\r\n") ;
+	else
+	{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100);
+		if (ret != HAL_OK)
+		{
+			strcpy((char*)msg,"Error Rx\r\n");
 		}
-		else{
-			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]) ;  // Turn the MSB and LSB into a signed 16-bit value
-			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]) ;
-			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]) ;
+		else
+		{
+			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]);  //concatena dois bytes
+			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]);
+			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]);
 			
 			gx_off = data[0] * gRes;
 			gy_off = data[0] * gRes;
 			gz_off = data[0] * gRes;
 			
-			sprintf((char*)msg,"gx_off=%f  gy_off=%f  gz_off=%f  [degrees/s]", gx_off,gy_off,gz_off);
+			sprintf((char*)msg,"gx_off=%f  gy_off=%f  gz_off=%f  [degrees/s]", gx_off,gy_off,gz_off); //imprime valores no terminal
 		}
 	}
-	 switch (s) {
-	 	case x: return gx_off;
-		case y: return gy_off;
-		case z: return gz_off;
-		default: return 01100101 01110010 01110010 01101111;
-	 }
+ }
+
+extern void adjMagnet () //essa função só atribui a mx_adj, my_adj, mz_adj o fator que multiplicado pela leitura do magnetômetro resulta no adjustment
+{
+	buf[0] = MAG_ASAX;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100);
+	if (ret != HAL_OK)
+	{
+		strcpy((char*)msg,"Error Tx\r\n");
+	}
+	else
+	{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,6,100);
+		if (ret != HAL_OK)
+		{
+			strcpy((char*)msg,"Error Rx\r\n");
+		}
+		else
+		{
+			data[0] = (float) buf[0]; 
+			data[1] = (float) buf[2];
+			data[2] = (float) buf[4];
+
+			mx_adj = (float) (data[0]-128)/256 + 1.;
+			my_adj = (float) (data[1]-128)/256 + 1.;
+			mz_adj = (float) (data[2]-128)/256 + 1.;
+
+			sprintf((char*)msg,"mx_adj=%f*Hx   my_adj=%f*Hy  mz_adj=%f*Hz\r\n",mx_adj,my_adj,mz_adj); //impressão dos valores no terminal
+		}
+	}
  }
 
 //Calculo da temperatura e pressao
 
-float getTemp(uint8_t * buf, uint16_t * e2prom) //vetor e2prom calculado na confgBmp
+extern float getTemp(uint8_t * buf, uint16_t * e2prom) //vetor e2prom calculado na confgBmp
 {
 	float Temp = 0;
 	long int UT, X1, X2;
@@ -142,7 +169,7 @@ float getTemp(uint8_t * buf, uint16_t * e2prom) //vetor e2prom calculado na conf
 	return Temp;
 }
 
-long int getPressure(uint8_t * buf, uint16_t * e2prom)
+extern long int getPressure(uint8_t * buf, uint16_t * e2prom)
 {
 	long int UP, X1, X2, X3, B3, B4, B6, B7, P;
 	
@@ -169,3 +196,6 @@ long int getPressure(uint8_t * buf, uint16_t * e2prom)
 	
 	return P;
 }
+
+#endif
+
