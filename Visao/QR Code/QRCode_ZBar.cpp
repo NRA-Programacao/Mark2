@@ -1,6 +1,5 @@
 //Reference:https://www.learnopencv.com/opencv-qr-code-scanner-c-and-python/
 
-// River 1x2 SPFC (AMANHA)
 
 #include <iostream>
 #include <algorithm>
