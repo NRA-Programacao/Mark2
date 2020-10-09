@@ -73,19 +73,8 @@ int main( int argc, char** argv ){
 
         //Modificações na imagem
         Mat imgHSV, imgGaussianBlur,imgContour;
-        GaussianBlur(imgOriginal, imgGaussianBlur, Size(3, 3), 0, 0, BORDER_DEFAULT);  //Aplica o efeito gaussiano na imagem original
+        GaussianBlur(imgOriginal, imgGaussianBlur, Size(9, 9), 0, 0, BORDER_DEFAULT);  //Aplica o efeito gaussiano na imagem original
         cvtColor(imgGaussianBlur, imgHSV, COLOR_BGR2HSV);  //Converte as cores de BGR para HSV
-
-
-        //Aplica a detecção de contornos
-        Mat SobelX,SobelY,absSobelX,absSobelY,imgTemp,resultado;
-        cvtColor(imgGaussianBlur,imgTemp,COLOR_BGR2GRAY);           //Converte as cores de BGR para escala de cinza
-        Sobel(imgTemp,SobelX,CV_64F,1,0);                           //aplica o filtro Sobel no eixo x
-        Sobel(imgTemp,SobelY,CV_64F,0,1);                           //aplica o filtro Sobel no eixo Y
-        convertScaleAbs(SobelX,absSobelX);
-        convertScaleAbs(SobelY,absSobelY);
-        bitwise_or(absSobelX,absSobelY,imgContour);                 //"Soma" as imagens com o filtro em x e y
-    
         
         //Reconhecimento do preto
         Mat black;
@@ -149,12 +138,10 @@ int main( int argc, char** argv ){
         //Cria e mostra as janelas 
         namedWindow("Original",WINDOW_NORMAL);
         namedWindow("Gaussian Blur", WINDOW_NORMAL);
-        namedWindow("Sobel", WINDOW_NORMAL);
         namedWindow("Preto", WINDOW_NORMAL);
         namedWindow("Amarelo", WINDOW_NORMAL);
         namedWindow("Vermelho", WINDOW_NORMAL);
         imshow("Original", imgOriginal); 
-        imshow("Gaussian Blur", imgGaussianBlur);
         imshow("Sobel", imgContour);
         imshow("Preto", black); 
         imshow("Amarelo", yellow);  
