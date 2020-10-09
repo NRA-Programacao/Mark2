@@ -42,14 +42,6 @@ int main( int argc, char** argv ){
     int black_iLowV = 0;
     int black_iHighV = 40;
 
-    //Amarelo
-    int yellow_iLowH = 20;
-    int yellow_iHighH = 30;
-    int yellow_iLowS = 100; 
-    int yellow_iHighS = 255;
-    int yellow_iLowV = 100;
-    int yellow_iHighV = 255;
-
     //Vermelho
     int red_iLowH1 = 0;
     int red_iHighH1 = 10;
@@ -79,10 +71,6 @@ int main( int argc, char** argv ){
         //Reconhecimento do preto
         Mat black;
         inRange(imgHSV, Scalar(black_iLowH, black_iLowS, black_iLowV), Scalar(black_iHighH, black_iHighS, black_iHighV), black);
-
-        //Reconhecimento do amarelo
-        Mat yellow;
-        inRange(imgHSV, Scalar(yellow_iLowH, yellow_iLowS, yellow_iLowV), Scalar(yellow_iHighH, yellow_iHighS, yellow_iHighV), yellow);
 
         //Reconhecimento do vermelho
         Mat red_low, red_high, red;
@@ -137,14 +125,10 @@ int main( int argc, char** argv ){
 
         //Cria e mostra as janelas 
         namedWindow("Original",WINDOW_NORMAL);
-        namedWindow("Gaussian Blur", WINDOW_NORMAL);
         namedWindow("Preto", WINDOW_NORMAL);
-        namedWindow("Amarelo", WINDOW_NORMAL);
         namedWindow("Vermelho", WINDOW_NORMAL);
         imshow("Original", imgOriginal); 
-        imshow("Sobel", imgContour);
-        imshow("Preto", black); 
-        imshow("Amarelo", yellow);  
+        imshow("Preto", black);  
         imshow("Vermelho", red); 
          
         
