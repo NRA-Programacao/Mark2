@@ -4,12 +4,43 @@
 #include "string.h"
 #include "stdio.h"
 
-//Variaveis globais
+//Variáveis globais
 long int B5;
 float ax_off, ay_off, az_off, mx_adj, my_adj, mz_adj;
 
+//Constantes globais
+extern static const uint8_t MPU9250_AD = 0x68 << 1; //Converte o endereço de 7 bits para 8 bits
+extern static const uint8_t MAG_AD = 0x0C << 1;
+extern static const uint8_t BMP_AD = 0x77 << 1;//Endereço do bmp180; pag.20 do datasheet
 
-//Funçoes
+extern static const uint8_t ACE_CONFIG_AD = 0x1C ;
+extern static const uint8_t GIR_CONFIG_AD = 0x1B ;static const uint8_t USER_CTRL = 0x6A ;
+extern static const uint8_t INT_BYPASS_CONFIG = 0x37;
+extern static const uint8_t PWR_MGMT_1 = 0x6B ;
+extern static const uint8_t CNTL1 = 0x0A ;
+extern static const uint8_t ACE_XOUT_H = 0x3B ;
+extern static const uint8_t MAG_XOUT_L = 0x03 ;
+extern static const uint8_t TEMP_CONTROL_REG_AD = 0x2E ; //Endereço do "control register" da temperatura; pag.21 do datasheet
+extern static const uint8_t PRE_CONTROL_REG_AD = 0xB4 ; //Endereço do "control register" da pressão; pag.21 do datasheet
+extern static const uint8_t BMP_REG_AD = 0xF4 ; //Endereço do "register"; pag.21 do datasheet
+extern static const uint8_t AC1_MSB = 0xAA ; //Endereço do msb do primeiro valor do e2prom; pag.13 do datasheet
+extern static const uint8_t XG_OFFSET_H = 0x13 ; //Endereço dos registradores de offset do giroscópio; register map - p. 7
+extern static const uint8_t XG_OFFSET_L = 0x14 ;
+extern static const uint8_t YG_OFFSET_H = 0x15 ;
+extern static const uint8_t YG_OFFSET_L = 0x16 ;
+extern static const uint8_t ZG_OFFSET_H = 0x17 ;
+extern static const uint8_t ZG_OFFSET_L = 0x18 ;
+extern static const uint8_t XA_OFFSET_H = 0x77 ; //Endereço dos registradores de offset do acelerômetro; register map - p. 9
+extern static const uint8_t XA_OFFSET_L = 0x78 ;
+extern static const uint8_t YA_OFFSET_H = 0x7A ;
+extern static const uint8_t YA_OFFSET_L = 0x7B ;
+extern static const uint8_t ZA_OFFSET_H = 0x7C ;
+extern static const uint8_t ZA_OFFSET_L = 0x7D ;
+extern static const uint8_t MAG_ASAX = 0x10 ; //Endereço dos registradores de ajuste de sensibilidade; register map - p. 47
+extern static const uint8_t MAG_ASAY = 0x11 ;
+extern static const uint8_t MAG_ASAZ = 0x12 ;
+
+//Funções
 
 //Configuraçao: Acel, Giro, Mag, Bmp
 extern void confgAce (uint8_t * buf, uint8_t A1)
@@ -81,11 +112,12 @@ extern void confgMPU (uint8_t * buf, uint8_t A1, uint8_t G1, uint8_t G2, uint8_t
 	HAL_I2C_Master_Transmit(&hi2c1, BMP_AD, buf, 3, 100);//Iniciando o sensor
 	buf[0] = B4; //AC1_MSB
 	HAL_I2C_Master_Receive(&hi2c1, BMP_AD, buf, 22, 100);//Lendo os valores do e2prom e armazenando-os em um vetor chamado e2prom[]
-	for (int i=0;i<11;i++) {
+	for (int i=0;i<11;i++)
+	{
 		//Lógica usada para os valores de j e k -> e[0] = 0 + 1 -> e[1] = 2 + 3 -> e[2] = 4 + 5
 		j = i*2;
 		k = (i*2)+1;
-	/*??*/	e2prom[i] = (int16_t)(((int16_t)buf[j] << 8)  | buf[k]) ;//Turn the MSB and LSB into a signed 16-bit value
+		e2prom[i] = (int16_t)(((int16_t)buf[j] << 8)  | buf[k]) ;//Turn the MSB and LSB into a signed 16-bit value
 	}
     }
 
@@ -224,5 +256,75 @@ extern long int getPressure(uint8_t * buf, uint16_t * e2prom)
 	return P;
 }
 
+//Leitura do acelerômetro, termômetro e giroscópio
+extern void getAccelTempGyro()
+{
+	buf[0] = ACE_XOUT_H;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MPU9250_AD,buf,1,100);
+	if (ret != HAL_OK)
+	{
+		strcpy((char*)msg,"Error Tx\r\n");
+	}
+	else
+	{
+		ret = HAL_I2C_Master_Receive(&hi2c1,MPU9250_AD,buf,14,100);
+		if (ret != HAL_OK)
+		{
+			strcpy((char*)msg,"Error Rx\r\n");
+		}
+		else
+		{
+			data[0] = (int16_t)(((int16_t)buf[0] << 8)  | buf[1]) ;  // Turn the MSB and LSB into a signed 16-bit value
+			data[1] = (int16_t)(((int16_t)buf[2] << 8)  | buf[3]) ;
+			data[2] = (int16_t)(((int16_t)buf[4] << 8)  | buf[5]) ;
+			data[3] = (int16_t)(((int16_t)buf[6] << 8)  | buf[7]) ;
+			data[4] = (int16_t)(((int16_t)buf[8] << 8)  | buf[9]) ;
+			data[5] = (int16_t)(((int16_t)buf[10] << 8) | buf[11]);
+			data[6] = (int16_t)(((int16_t)buf[12] << 8) | buf[13]);
+
+			ax = (float) data[0] * aRes;
+			ay = (float) data[1] * aRes;
+			az = (float) data[2] * aRes;
+
+			t = ((float) data[3] - 21.0)/333.87 + 21.0;
+
+			gx = (float) data[4] * gRes;
+			gy = (float) data[5] * gRes;
+			gz = (float) data[6] * gRes;
+
+			sprintf((char*)msg," ax=%f  ay=%f  az=%f  [m/s^2]\n gx=%f  gy=%f  gz=%f  [degrees/s]\n t=%f[ºC]\n",ax,ay,az,gx,gy,gz,t);
+		}
+	}
+	HAL_UART_Transmit(&huart2, msg, sizeof(msg), 100);
+}
+
+//Leitura Magnetômetro
+extern void
+{
+	buf[0] = MAG_XOUT_L;
+	ret = HAL_I2C_Master_Transmit(&hi2c1,MAG_AD,buf,1,100);
+	if (ret != HAL_OK){
+			strcpy((char*)msg,"Error Mag Tx\r\n");
+		}
+		else{
+			ret = HAL_I2C_Master_Receive(&hi2c1,MAG_AD,buf,6,100);
+			if (ret != HAL_OK){
+				strcpy((char*)msg,"Error Mag Rx\r\n");
+			}
+			else{
+				data[0] = (int16_t)(((int16_t)buf[1] << 8)  | buf[0]);  // Turn the MSB and LSB into a signed 16-bit value
+				data[1] = (int16_t)(((int16_t)buf[3] << 8)  | buf[2]);
+				data[2] = (int16_t)(((int16_t)buf[5] << 8)  | buf[4]);
+
+				mx = (float) data[0] *((magSensi[0] - 128)*0.5/128 + 1);
+				my = (float) data[1] *((magSensi[1] - 128)*0.5/128 + 1);
+				mz = (float) data[2] *((magSensi[2] - 128)*0.5/128 + 1);
+
+				sprintf((char*)msg,"mx=%f   my=%f   mz=%f\r\n",mx,my,mz);
+			}
+		}
+	HAL_UART_Transmit(&huart2, msg, sizeof(msg), 100);
+	HAL_Delay(100);
+}
 #endif
 
