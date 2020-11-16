@@ -1,0 +1,266 @@
+local matrix = require 'matrix'
+
+function sysCall_init()
+    -- do some initialization here
+    imuDebug  = assert(io.open("imu_debug.txt","w"))
+    quadrotor = sim.getObjectHandle('Quadricopter_base')
+    
+    gyroCommunicationTube=sim.tubeOpen(0,'gyroData'..sim.getNameSuffix(nil),1) -- put this in the initialization phase
+    angVel = {0.0034,0.0022,0.0018}
+    
+    accelCommunicationTube=sim.tubeOpen(0,'accelerometerData'..sim.getNameSuffix(nil),1) -- put this in the initialization phase
+    accel = {0.00001,0.00003,-9.80665}
+    
+    attQuaternionTube=sim.tubeOpen(0,'attQuaternion'..sim.getNameSuffix(nil),1)
+    
+    hpf_fc = 0.004   -- gyro cutoff freq
+    lpf_fc = 35.0    -- acc  cutoff freq
+    lpf_fc_yaw = 20.0
+    
+    vec_hpf_last = {0,0,0}      -- do not use outside HPFVector3
+    vec_raw_hpf_last = {0,0,0}  -- do not use outside HPFVector3
+    
+    vec_lpf_last = {0,0,0}      -- do not use outside LPFVector3
+    yaw_filt_last = 0           -- do not use outside YawCompassFilt
+    
+    Ts  = sim.getSimulationTimeStep()
+    -- Initialization of iterative variables
+    -- ASGD method
+    qs = {1,0,0,0}
+    asgdBeta = 1.14
+    asgdMi0 = 0.037
+    asgdGammat = 0.0    -- do not use outside updateErrFcn() & rotateQs()
+    
+    -- Euler Angles from the ASGD
+    roll_quad = 0
+    pitch_quad = 0
+    sim.setFloatSignal("Roll_qASGD",roll_quad)
+    sim.setFloatSignal("Pitch_qASGD",pitch_quad)
+    
+    lastTime = sim.getSimulationTime()
+end
+
+function sysCall_actuation()
+    -- put your actuation code here
+end
+
+function sysCall_sensing()
+    gyro_data=sim.tubeRead(gyroCommunicationTube)
+    if (gyro_data) then angVel = sim.unpackFloatTable(gyro_data) end
+    
+    acc_data=sim.tubeRead(accelCommunicationTube)
+    if (acc_data) then accel = LPFVector3(sim.unpackFloatTable(acc_data)) end
+    
+    -- Obtain attitude quaternion:
+    -- Quaternion-based Attitude estimation using ASGD algorithm
+    -- Refs: 
+    -- [1]: Quaternion-based Kalman filter for AHRS using an adaptive-step gradient descent algorithm, 
+    --      Wang, Li and Zhang, Zheng and Sun, Ping, International Journal of Advanced Robotic Systems, 2015
+    -- [2]: Estimation of IMU and MARG orientation using a gradient descent algorithm,
+    --      Madgwick, Sebastian OH and Harrison, Andrew JL and Vaidyanathan, Ravi, international Conference on Rehabilitation Robotics, 2011
+    -- [3]: "How to integrate Quaternions", Ashwin Narayan (www.ashwinnarayan.com/post/how-to-integrate-quaternions/)
+    ------------------------ ASGD -----------------------------
+        
+    local currentTime = sim.getSimulationTime()
+    local dt = currentTime - lastTime
+    if (dt ~= 0) then
+        updateErrFcn(dt)
+        
+        --rotateQs(dt)
+        integrate_quat(dt)
+        local q0 = qs[1]
+        local q1 = qs[2]
+        local q2 = qs[3]
+        local q3 = qs[4]
+        
+        roll_quad  = math.atan(2*(q2*q3 + q0*q1), q0^2 - q1^2 - q2^2 - q3^2) -- Roll
+        pitch_quad = math.asin(-2*(q1*q3 - q0*q2))                           -- Pitch
+        yaw_quad   = math.atan(2*(q1*q2 + q0*q3), q0^2 + q1^2 - q2^2 - q3^2) -- Yaw
+        -- Logging:
+        --att_vrep = sim.getObjectOrientation(quadrotor,-1)
+        --imuDebug:write(string.format("%+.4f %+.4f %+.4f %+.4f %+.4f %+.4f\n", att_vrep[1], att_vrep[2], att_vrep[3], roll_quad, pitch_quad, yaw_quad))
+        sim.addStatusbarMessage(string.format("Roll %+.4f Pitch %+.4f Yaw %+.4f", 180/math.pi*roll_quad, 180/math.pi*pitch_quad, 180/math.pi*yaw_quad))
+        --sim.setFloatSignal("Roll_qASGD",roll_quad)
+        --sim.setFloatSignal("Pitch_qASGD",pitch_quad)
+        sim.tubeWrite(attQuaternionTube,sim.packFloatTable(qs))
+    end
+    lastTime = currentTime
+end
+
+function sysCall_cleanup()
+    -- do some clean-up here
+    imuDebug:close()
+end
+
+function updateErrFcn(Ts) -- [1]
+   -- Normalized gravity in the n-frame
+   local g = matrix{0,0,-1}
+   -- Normalized accelerometer output (b-frame)
+   local a = matrix{-accel[1],-accel[2],-accel[3]}  -- the accelerometer model could be given the acceleration at rest frame
+   local a_norm = math.sqrt(matrix.scalar(a,a))
+   if (a_norm ~= 0) then
+        a = matrix.divnum(a,a_norm)
+   end
+   
+   -- DCM (earth to body) in terms of the quaternion
+   local q0 = qs[1]
+   local q1 = qs[2]
+   local q2 = qs[3]
+   local q3 = qs[4]
+   
+   local C11 = q0*q0 + q1*q1 - q2*q2 - q3*q3 -- ok
+   local C12 = 2*(q1*q2 - q0*q3)             -- ok
+   local C13 = 2*(q1*q3 + q0*q2)             -- ok
+   local C21 = 2*(q1*q2 + q0*q3)             -- ok
+   local C22 = q0*q0 - q1*q1 + q2*q2 - q3*q3 -- ok
+   local C23 = 2*(q2*q3 - q0*q1)             -- ok
+   local C31 = 2*(q1*q3 - q0*q2)             -- ok
+   local C32 = 2*(q2*q3 + q0*q1)             -- ok
+   local C33 = q0*q0 - q1*q1 - q2*q2 - q3*q3 -- ok
+   
+   local DCM = matrix{{C11,C12,C13},{C21,C22,C23},{C31,C32,C33}}
+   DCM = matrix.transpose(DCM) -- (body to earth)
+   
+   local ErrFcn = matrix.mul(DCM,g) - a
+   
+   -- Jacobian Matrix
+   
+   local Jq = matrix{{-q2,q3,-q0,q1},{q1,q0,q3,q2},{q0,-q1,-q2,q3}}
+   Jq = matrix.mulnum(Jq,2)
+   
+   -- Gradient
+   
+   local GradErrFcn = matrix.mul(matrix.transpose(Jq),ErrFcn)
+   
+   local GradErrFcn_norm = math.sqrt(matrix.scalar(GradErrFcn,GradErrFcn))
+   if (GradErrFcn_norm ~= 0) then
+        GradErrFcn = matrix.divnum(GradErrFcn,GradErrFcn_norm)
+   end
+   
+   -- Update ASGD mi
+   local omg = matrix{angVel[1],angVel[2],angVel[3]}
+   local omg_norm = math.sqrt(matrix.scalar(omg,omg))
+   local Mi_t = asgdBeta*omg_norm
+   local Beta = 0.00168             
+   -- Segundo [2](Fig. 4) Beta deveria ser 0.033, mas experimentalmente quanto mais alto mais instavel aqui
+   -- Creio que devido a taxa em que essa simulacao roda, cerca de 20Hz enquanto que o artigo recomenda a cima de 100 Hz
+   -- para garantir precisao (veja Fig. 5 do artigo).
+   asgdGammat = Beta/(Mi_t + Beta)  -- [2], eq. 22 and 25
+   local asgdMi = asgdMi0 + Mi_t*Ts -- [1], eq. 29
+   -- Update qs
+   for i = 1,4,1 do
+    qs[i] = qs[i] - asgdMi*GradErrFcn[i][1]
+   end
+   
+   qs = normalize_quat(qs)
+   
+end
+
+function integrate_quat(Ts)
+    -- Integrate the quaternion orientation over time using quaternion exponential definition
+    -- Consider Exp(q) = e^w*e^v = e^w*( cos(|v|) + v/|v|*sin(|v|) ), where q = w + v = w + xi + yj + zk
+    q0 = qs[1]
+    q1 = qs[2]
+    q2 = qs[3]
+    q3 = qs[4]
+    quat_product_conj = matrix{{q0, -q1, -q2, -q3}, {q1, q0, q3, -q2}, {q2, -q3, q0, q1}, {q3, q2, -q1, q0}}
+    
+    exp_omega = {0, 0.5*Ts*angVel[1], 0.5*Ts*angVel[2], 0.5*Ts*angVel[3]} -- initialize exp_omega
+    exp_omega_v_nrm = math.sqrt(exp_omega[2]^2 + exp_omega[3]^2 + exp_omega[4]^2)
+    
+    exp_omega_qw = math.exp(exp_omega[1])*math.cos(exp_omega_v_nrm)
+    exp_omega_qx = math.exp(exp_omega[1])*exp_omega[2]*math.sin(exp_omega_v_nrm)/exp_omega_v_nrm
+    exp_omega_qy = math.exp(exp_omega[1])*exp_omega[3]*math.sin(exp_omega_v_nrm)/exp_omega_v_nrm
+    exp_omega_qz = math.exp(exp_omega[1])*exp_omega[4]*math.sin(exp_omega_v_nrm)/exp_omega_v_nrm
+    
+    exp_omega_q = matrix{{exp_omega_qw, exp_omega_qx, exp_omega_qy, exp_omega_qz}}^'T'
+    -- Integration
+    quat_new = matrix.mul(quat_product_conj, exp_omega_q)
+
+    q0 = quat_new[1][1]
+    q1 = quat_new[2][1]
+    q2 = quat_new[3][1]
+    q3 = quat_new[4][1]
+    
+    --asgdGammat = 0, desable fusion
+    -- Fusion, see [2], eq. 23, section III.C
+    ---[[
+    qs[1] = (1 - asgdGammat)*q0 + asgdGammat*qs[1]
+    qs[2] = (1 - asgdGammat)*q1 + asgdGammat*qs[2]
+    qs[3] = (1 - asgdGammat)*q2 + asgdGammat*qs[3]
+    qs[4] = (1 - asgdGammat)*q3 + asgdGammat*qs[4]
+    --]]
+    qs = normalize_quat(qs)
+end
+
+function rotateQs(Ts)
+    -- Actually a quaternion Integration over time:
+    local q0 = qs[1]
+    local q1 = qs[2]
+    local q2 = qs[3]
+    local q3 = qs[4]
+    local omega = matrix{{0, angVel[1], angVel[2], angVel[3]}}^'T'
+    
+    local quat_product_conj = matrix{{q0, -q1, -q2, -q3}, {q1, q0, q3, -q2}, {q2, -q3, q0, q1}, {q3, q2, -q1, q0}}
+    
+    local quat_derivative = matrix.mul(quat_product_conj, omega)
+          quat_derivative = matrix.mulnum(quat_derivative, 0.5)
+    
+    -- Integration
+    q0 = q0 + Ts*quat_derivative[1][1]
+    q1 = q1 + Ts*quat_derivative[2][1]
+    q2 = q2 + Ts*quat_derivative[3][1]
+    q3 = q3 + Ts*quat_derivative[4][1]
+    
+    --asgdGammat = 0, desable fusion
+    -- Fusion, see [2], eq. 23, section III.C 
+    qs[1] = (1 - asgdGammat)*q0 + asgdGammat*qs[1]
+    qs[2] = (1 - asgdGammat)*q1 + asgdGammat*qs[2]
+    qs[3] = (1 - asgdGammat)*q2 + asgdGammat*qs[3]
+    qs[4] = (1 - asgdGammat)*q3 + asgdGammat*qs[4]
+    
+    qs = normalize_quat(qs)
+end
+
+function normalize_quat(quat)
+    quat_norm = math.sqrt(quat[1]^2 + quat[2]^2 + quat[3]^2 + quat[4]^2)
+    if (quat_norm ~= 0) then
+        for i = 1,4,1 do
+            quat[i] = quat[i]/quat_norm
+        end
+    end
+    return quat
+end
+
+function HPFVector3(raw_vec)
+    -- High Pass Filter implementation to reduce gyro bias effect
+    -- Note this filter is for a vector (table) of size 3
+    local alpha = 1/(2*math.pi*Ts*hpf_fc + 1)
+    local vec = {0,0,0}
+    for i=1,#vec,1 do
+        vec[i] = alpha*vec_hpf_last[i] + alpha*(raw_vec[i] - vec_raw_hpf_last[i])
+        vec_raw_hpf_last[i] = raw_vec[i]
+        vec_hpf_last[i] = vec[i]
+    end
+    return vec
+end
+
+function LPFVector3(raw_vec)
+    -- Low Pass Filter implementation to reduce acc noise effect
+    -- Note this filter is for a vector (table) of size 3
+    local alpha = (2*math.pi*Ts*lpf_fc)/(2*math.pi*Ts*lpf_fc + 1)
+    local vec = {0,0,0}
+    for i=1,#vec,1 do
+        vec[i] = alpha*raw_vec[i] + (1 - alpha)*vec_lpf_last[i]
+        vec_lpf_last[i] = vec[i]
+    end
+    return vec
+end
+
+function YawCompassFilt(measurement)
+    -- Low Pass Filter implementation to reduce yaw compass noise effect
+    local alpha = (2*math.pi*Ts*lpf_fc_yaw)/(2*math.pi*Ts*lpf_fc_yaw + 1)
+    local yaw_filt = alpha*measurement + (1 - alpha)*yaw_filt_last
+    yaw_filt_last  = yaw_filt
+    return yaw_filt
+end
