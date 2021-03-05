@@ -6,7 +6,7 @@
 
 //Variáveis globais
 long int B5;
-float ax_off, ay_off, az_off, mx_adj, my_adj, mz_adj;
+float ax_off, ay_off, az_off, mx_adj, my_adj, mz_adj, US_1, US_2, distance;
 
 //Constantes globais
 extern static const uint8_t MPU9250_AD = 0x68 << 1; //Converte o endereço de 7 bits para 8 bits
@@ -39,6 +39,12 @@ extern static const uint8_t ZA_OFFSET_L = 0x7D ;
 extern static const uint8_t MAG_ASAX = 0x10 ; //Endereço dos registradores de ajuste de sensibilidade; register map - p. 47
 extern static const uint8_t MAG_ASAY = 0x11 ;
 extern static const uint8_t MAG_ASAZ = 0x12 ;
+
+extern static const uint8_t GPIO_PIN_ultrassom = 00 ;
+/////extern string const GPIO_X = GPIO_A ;
+/////extern static const canal_ultrassom = TIM_CHANNEL_2;
+//OS PARÂMETROS DA FUNÇÃO DE SENSOR ULTRASSÔNICO DEVEM SER AJUSTADOS SEGUNDO CONFIGURAÇÃO NO CUBE_MX
+
 
 //Funções
 
@@ -326,5 +332,28 @@ extern void
 	HAL_UART_Transmit(&huart2, msg, sizeof(msg), 100);
 	HAL_Delay(100);
 }
+
+//Delay microssegundos
+void delay_us (uint16_t us)
+{
+	__HAL_TIM_SET_COUNTER(&htim1,0);  // set the counter value a 0
+	while (__HAL_TIM_GET_COUNTER(&htim1) < us);  // wait for the counter to reach the us input in the parameter
+}
+
+//Sensor ultrassônico
+extern void
+{
+	HAL_GPIO_WritePin	(GPIOX, GPIO_PIN_ultrassom, GPIO_PIN_SET);
+	delay_us(10);
+	HAL_GPIO_WritePin	(GPIOX, GPIO_PIN_ultrassom, GPIO_PIN_RESET);
+	US_1 = HAL_TIM_ReadCapturedValue(htim, canal_ultrassom);
+	__HAL_TIM_SET_CAPTUREPOLARITY(htim, canal_ultrassom, TIM_INPUTCHANNELPOLARITY_FALLING);
+	US_2 = HAL_TIM_ReadCapturedValue(htim, canal_ultrassom);
+	__HAL_TIM_SET_COUNTER(htim, 0);
+	__HAL_TIM_SET_CAPTUREPOLARITY(htim, TIM_CHANNEL_2, TIM_INPUTCHANNELPOLARITY_RISING);
+	distance = (US_2 - US_1)/58;
+	HAL_Delay(80);
+}
+
 #endif
 
