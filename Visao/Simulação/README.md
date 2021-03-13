@@ -35,14 +35,14 @@ Copiar o arquivo:
 
 ## Simulação
 
-**Terminal 1 **:
+No **Terminal 1 **:
 
 		roslaunch hector_gazebo_worlds start.launch
 		
-**Terminal 2 **:
+No **Terminal 2 **:
 		
 		roslaunch hector_quadrotor_demo put_robot_in_world.launch
 		
-**Terminal 3 **:
+No **Terminal 3 **:
 		
 		rosrun teleop_twist_keyboard teleop_twist_keyboard.py 		
