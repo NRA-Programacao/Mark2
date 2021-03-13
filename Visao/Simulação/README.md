@@ -14,9 +14,7 @@ Copiar o arquivo:
 
 			markII.rviz
 			
-para
-
-			hector_quadrotor/hector_quadrotor_demo/rviz_cfg
+			para hector_quadrotor/hector_quadrotor_demo/rviz_cfg
 			
 
 No terminal
