@@ -65,9 +65,10 @@ int main()
 	//~ Ts  = sim.getSimulationTimeStep()
 	//~ high_resolution_clock::time_point t2 = high_resolution_clock::now();
 	//~ duration<double> Ts = duration_cast<duration<double>>(t2 - t1);
-	
+	void sysCall_actuation()
 	end = clock();
 	double duration_sec = double(end-start)/CLOCKS_PER_SEC;
+	
 	
 
 	//~ sim.addStatusbarMessage(string.format("Att Kp: %.4f Kd: %.4f\nPos Kp: %.4f Kd: %.4f", attKp, attKd, posKp, posKd))
@@ -90,7 +91,7 @@ int main()
 	//~ end
 }
 
-void sysCall_actuation()
+void sysCall_actuation() // em loop
 {
 	
 	float *targetPos;
@@ -100,12 +101,13 @@ void sysCall_actuation()
     //~ --roll_quad = sim.getFloatSignal("Roll_qASGD")   -- in rad
 
     //~ -- Vertical control:
-    float dummy_array[3] = {0.0, 0.0, 0.0};
+    float dummy_array[3] = {0, 0, 0}; //referencia
     targetPos = getObjectPosition(targetObj, dummy_array);
     //~ --pos=sim.getObjectPosition(d,-1)
-    float *l; //= getVelocity(heli);//problema da daq
-    float e = (targetPos[2] - gps_xyz[2]);
-    float cumul = cumul + e;
+    float *l; //= getVelocity(heli);//problema da daq 
+    float e = (targetPos[2] - gps_xyz[2]); //erro de posição
+    //float//
+cumul = cumul + e;
     float pv = pParam*e;
     float thrust = 5.335 + pv + iParam*cumul + dParam*(e-lastE) + l[2]*vParam;
     lastE = e;
@@ -116,7 +118,7 @@ void sysCall_actuation()
 	
 	//~ -- Rotational control:
     float *yaw_target = getObjectOrientation(targetObj, dummy_array);
-    float yaw_error = yaw_quad - yaw_target[2];
+    float yaw_error = yaw_quad - yaw_target[2]; //em z
     float rotCorr = yaw_error*0.1 + 2*(yaw_error - yaw_error_last);
     yaw_error_last = yaw_error;
 
@@ -149,37 +151,4 @@ void sysCall_actuation()
     //~ for i=1,4,1 do
         //~ sim.setScriptSimulationParameter(propellerScripts[i],'particleVelocity',particlesTargetVelocities[i])
     //~ end
-}
-
-void P2Controller()
-{
-    //~ -- Full Quaternion Based Attitude Control for a Quadrotor, Emil Fresk and George Nikolakopoulos,
-    //~ -- European Control Conference, 2013
-    float q0 = qs[0];
-    float q1 = qs[1];
-    float q2 = qs[2];
-    float q3 = qs[3];
-    float qErr[3] = {0,0,0};
-    
-    q1 = -q1;
-    q2 = -q2;
-    q3 = -q3;
-    //~ -- Product: q_ref (x) *q_m, eq. 19:
-    float qErr0 = p0*q0 - p1*q1 - p2*q2 - p3*q3;
-    qErr[0] = p0*q1 + p1*q0 + p2*q3 - p3*q2;
-    qErr[1] = p0*q2 - p1*q3 + p2*q0 + p3*q1;
-    qErr[2] = p0*q3 + p1*q2 - p2*q1 + p3*q0;
-    //~ -- eq. 20:
-    if (qErr0 < 0)
-    {
-        qErr[0] = -qErr[0];
-        qErr[1] = -qErr[1];
-        qErr[2] = -qErr[2];
-    }
-    //~ -- eq. 21:
-    for(int i=0; i<3; i++)
-    {
-        p2tau[i] = -KwP2Controller*angVel[i] - KqP2Controller*qErr[i];
-    }
-
 }
