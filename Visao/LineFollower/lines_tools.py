@@ -199,8 +199,8 @@ def display_line_of_orientation(image, yaw_angle_rads, x_to_compute_distance = N
     else:
         x1 = int(0.5*width)
     
-    y2 = int(y1 - line_length*sin)
-    x2 = int(x1 + line_length*cos)
+    y2 = y1 - np.int(line_length*sin)
+    x2 = x1 + np.int(line_length*cos)
 
     cv.line(mask, pt1 = (x1,y1), pt2 = (x2, y2), color = (0,0,255),thickness= 2)
     
@@ -267,50 +267,72 @@ def direction_by_10pts(binary_img):
 
 
 
-def direction_by_lane_center(binary_img):
+def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
 
-    ret, thresh = cv.threshold(binary_img, 127, 255, 0)
+    def moments_pass(moments):
+        flag = moments['m00'] > LOWER_AREA and moments['m00'] < HIGHER_AREA
+        flag = flag and moments['m10'] != 0
+        flag = flag and moments['m01'] != 0 
+        return flag
 
-    areas = []
-    centroides = np.zeros((len(contour_img),2))
-
-
-    for i in range(len(contour_img)):
-        momentos = cv.moments(contour_img[int(i)])
-        areas.append(momentos["m00"])
-
-    areas_norm = areas/np.max(areas)
-
-    num_contour_img = 0
-    for i in range(len(contour_img)):
-        #Cx = m10/m00, Cy = m01/m00
-        momentos = cv.moments(contour_img[int(i)])
-        if (areas_norm[i] < 0.1 and areas_norm[i] > 0.0005):
-            C_x = momentos['m10']/momentos['m00']
-            C_y = momentos['m01']/momentos['m00']
-            centroides[i][0], centroides[i][1] = C_x, C_y #ufa
-            num_contour += 1 
-
-    centroides = np.resize(centroides, (num_contour, 2))
-    for i in range(len(centroides)):
-        cv.circle(img0, (int(centroides[i][0]),int(centroides[i][1])),1,(0,0,255),10)
-
-    x_pts = np.zeros((len(centroides)))
-    y_pts = np.zeros((len(centroides)))
-    for i in range(len(centroides)):
-        x_pts[i] = centroides[i][0]
-        y_pts[i] = altura - centroides[i][1]
+    # Get contours and hierarchy
+    contours, hierarchy = cv.findContours(binary_img, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     
-    return y_pts, x_pts
+    print("Number of contours = " + str(len(contours)))
+
+    if(len(contours) != 0):
+
+        areas = []
+        centroids = np.zeros((len(contours),2))
+        num_contour = 0
+
+        for i in range(len(contours)):
+            moments = cv.moments(contours[int(i)])
+
+            if(moments_pass(moments)):
+                print(moments_pass(moments))
+                # Cx = m10/m00, Cy = m01/m00
+                centroids[num_contour][0] = moments['m10']/moments['m00']
+                centroids[num_contour][1] = moments['m01']/moments['m00'] 
+                num_contour += 1
+
+        centroids = np.resize(centroids, (num_contour, 2))
+        
+        x_pts_cv = centroids[:,0][:]
+        y_pts_cv = centroids[:,1][:]
+        print(centroids)
+
+        x_pts_drone = np.zeros((len(centroids)))
+        y_pts_drone = np.zeros((len(centroids)))
+
+        # TODO: vectorize
+        for i in range(len(centroids)):
+            x_pts_drone[i] = centroids[i][0]
+            y_pts_drone[i] = binary_img.shape[0] - centroids[i][1]
+ 
+        #for i in range(len(centroids)):
+        #    cv.circle(img0, (int(centroids[i][0]),int(centroids[i][1])),1,(0,0,255),10)    
+        
+        if x_pts_drone.shape[0] == 0 or y_pts_drone.shape[0] == 0:
+            flag = 0
+        else:
+            flag = 1
+        return flag, y_pts_drone, x_pts_drone, y_pts_cv, x_pts_cv 
+
+    flag = 0
+    return flag, -1, -1, -1, -1
 
 
-def yaw_angle_rads(coordinates):
+def yaw_angle_rads(X_pts, Y_pts):
     
-    Y_pts, X_pts = coordinates[:,0][:], coordinates[:,1][:]
+    #Y_pts, X_pts = coordinates[:,0][:], coordinates[:,1][:]
+    if X_pts.shape[0] <= 1 and Y_pts.shape[0] <= 1:
+        return 0
+
     m,b = np.polyfit(X_pts, Y_pts, deg = 1)
     
 
-    yaw_rad = np.arccos(m)
+    yaw_rad = - np.arctan(m)
     
     return yaw_rad
 
