@@ -7,7 +7,7 @@
     <arg name="z" default="0.3" />
     <arg name="roll" default="0.0"/>
     <arg name="pitch" default="0.0"/>
-    <arg name="yaw" default="-1.570796327"/>
+    <arg name="yaw" default="-1.570796327"/>  <!-- Rotacionado para alinhar com o circuito da FIRA -->
 
   <!-- Spawn simulated quadrotor uav -->
   <include file="$(find hector_quadrotor_gazebo)/launch/spawn_quadrotor.launch" >
