@@ -53,7 +53,6 @@ class ImageConverter
   ros::NodeHandle nh_;
   image_transport::ImageTransport it_;
   image_transport::Subscriber image_sub_;
-  image_transport::Publisher image_pub_;
 
 public:
   ImageConverter()
@@ -139,8 +138,8 @@ public:
     }
     
     // Update GUI Window
-    cv::imshow(OPENCV_WINDOW, cv_ptr->image);
-    cv::waitKey(3);
+    imshow(OPENCV_WINDOW, cv_ptr->image);
+    waitKey(3);
 
     
   }
