@@ -14,23 +14,20 @@ Seguir o tutorial abaixo para instalar o pacote para controlar o drone pelo tecl
 
 ## Adaptação do Hector Quadrotor para ter a câmera em baixo
 
-Substiuir os arquivos abaixo pelos originais:
+Substiuir os arquivos abaixo pelos originais:     
+Primeiro o arquivo
 
 			put_robot_in_world.launch
 			
-			em hector_quadrotor/hector_quadrotor_demo/launch
-			
-e			
+deve ser subsitituído em     ```hector_quadrotor/hector_quadrotor_demo/launch``` e o arquivo		
 			
 			quadrotor_hokuyo_utm30lx.urdf.xacro
 			
-			em hector_quadrotor/hector_quadrotor_description/urdf
-			
-Copiar o arquivo:
+em ```hector_quadrotor/hector_quadrotor_description/urdf```. Além disso, copiar o arquivo:
 
 			markII.rviz
 
-			para hector_quadrotor/hector_quadrotor_demo/rviz_cfg
+para     ```hector_quadrotor/hector_quadrotor_demo/rviz_cfg```
 			
 
 ## Simulação
