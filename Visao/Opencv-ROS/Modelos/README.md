@@ -1,1 +1,1 @@
-  Esses arquivos servem como um modelo para fazer um codigo capaz de receber uma imagem publicada em um tópico de ROS e converte-la em um formato que possa ser trabalhado em Opencv.
+  Esses arquivos servem como um modelo para fazer um codigo capaz de receber uma imagem publicada em um tópico de ROS e converte-la em um formato que possa ser trabalhado em Opencv. Alterações para diferente casos podem e devem ser feitas, os códigos acima servem apenas como orientação.
