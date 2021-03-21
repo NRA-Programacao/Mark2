@@ -1,0 +1,35 @@
+material DroneSim/qr1t
+{
+	technique
+	{
+	    pass
+	    {
+	       
+	        texture_unit
+	       {
+	            scale  1 1
+	            texture   tem1.png
+	        }
+	    }
+
+	  
+	}
+}
+
+material DroneSim/qr2t
+{
+	technique
+	{
+	    pass
+	    {
+	       
+	        texture_unit
+	       {
+	            scale  1 1
+	            texture   tem1.png
+	        }
+	    }
+
+	  
+	}
+}

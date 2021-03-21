@@ -1,0 +1,34 @@
+<?xml version='1.0'?>
+<sdf version ='1.4'>
+
+<model name='qrt'>
+      <static>1</static>
+      <link name="qrt">
+        <pose> 0 0 0 0 0 0 </pose>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                        <size> 0.2  0.2  0.001 </size>
+                    </box>
+                </geometry>
+
+            </collision>
+
+            <visual  name="visual">
+                <geometry>
+                    <box>
+                        <size> 0.2  0.2  0.001</size>
+                    </box>
+                </geometry>
+
+                <material>
+                    <script>
+                        <uri>model://qr_torre/materials/scripts/</uri>
+                        <uri>model://qr_torre/materials/textures/</uri>
+                        <name>DroneSim/QRt</name>
+                    </script>
+                </material>
+            </visual>
+     </link>
+</model>
+</sdf>
