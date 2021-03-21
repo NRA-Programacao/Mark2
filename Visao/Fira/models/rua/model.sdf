@@ -1,0 +1,33 @@
+<?xml version='1.0'?>
+<sdf version ='1.4'>
+
+<model name='rua_FIRA'>
+      <static>1</static>
+      <link name='field'>
+        <pose>0 0 0.01 0 -0 0</pose>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>4.85 3.85</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+               <size>4.85 3.85</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>model://rua/materials/scripts/</uri>
+              <uri>model://rua/materials/textures/</uri>
+              <name>DroneSim/rua</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+</model>
+</sdf>
