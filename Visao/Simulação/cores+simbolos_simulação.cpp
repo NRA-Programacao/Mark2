@@ -17,12 +17,12 @@ int thickness = 1;
 int baseline = 0;
 
 
-cv::Size text = cv::getTextSize(label, fontface, scale, thickness, &baseline);
-cv::Rect r = cv::boundingRect(contour);
+Size text = cv::getTextSize(label, fontface, scale, thickness, &baseline);
+Rect r = cv::boundingRect(contour);
 
-cv::Point pt(r.x + ((r.width - text.width) / 2), r.y + ((r.height + text.height) / 2));
-cv::rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), FILLED);
-cv::putText(im, label, pt, fontface, scale, CV_RGB(0,0,0), thickness, 8);
+Point pt(r.x + ((r.width - text.width) / 2), r.y + ((r.height + text.height) / 2));
+rectangle(im, pt + cv::Point(0, baseline), pt + cv::Point(text.width, -text.height), CV_RGB(255,255,255), FILLED);
+putText(im, label, pt, fontface, scale, CV_RGB(0,0,0), thickness, 8);
 }
 
 static const std::string OPENCV_WINDOW = "Image window";
@@ -61,12 +61,12 @@ public:
     // Subscribe to input video feed and publish output video feed
     image_sub_ = it_.subscribe("/downward_cam/camera/image", 1, &ImageConverter::imageCallback, this);
 
-    cv::namedWindow(OPENCV_WINDOW);
+    namedWindow(OPENCV_WINDOW);
   }
 
   ~ImageConverter()
   {
-    cv::destroyWindow(OPENCV_WINDOW);
+    destroyWindow(OPENCV_WINDOW);
   }
   
   void imageCallback(const sensor_msgs::ImageConstPtr& msg)
