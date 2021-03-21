@@ -27,7 +27,7 @@ Ruas para Navegação do Drone, ainda sem os QR Code
 
       roslaunch fira Spawn_ruas_sem_qr.launch
 
-❗ Recomendo utilar essa versão SOZINHA, se quiser testar a navegação com outras missões usar a versão abaixo com os pousos
+❗ Por posicionamento, recomendamos utilar essa versão SOZINHA, se quiser testar a navegação com outras missões usar a versão abaixo com os pousos
 
 ### 2. _Delivering the first aid kit_ e _Return and land on starting point_
 Ruas para Navegação do Drone com todos os QR Codes de orientação, Cruz Vermelha e Heliponto Azul
