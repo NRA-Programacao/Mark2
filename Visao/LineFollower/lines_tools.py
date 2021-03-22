@@ -6,7 +6,6 @@ def show_img(image, name):
     cv.namedWindow(name, cv.WINDOW_GUI_EXPANDED)
     cv.imshow(name, image)
 
-
 def get_image_parameters(image):
     
     img_shape = image.shape
@@ -83,7 +82,6 @@ def binarization(imagem, noise_level = 1, threshold_type = "otsu", inv = "True")
 
     output_imgs = {"blur": blur_img, "contours": contours, "bw": bw_img, "thresh": thresh_img}
     return output_imgs
-
 
 def linha_media(dilate_img, minLineLength = 100, maxLineGap = 20):
 
@@ -214,7 +212,6 @@ def draw_circles(image ,coordinates):
          
     for i in range(len(y_pts)):
         cv.circle(image, (int(x_pts[i]),int(y_pts[i])),1,(0,0,255),5)
-
     
 def direction_by_10pts(binary_img):
 
@@ -269,6 +266,15 @@ def direction_by_10pts(binary_img):
 
 def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
 
+    # Crop binary image for vertical analisys
+    bin_center_x = int(binary_img.shape[1]/2)
+    lower_xval = int(bin_center_x - binary_img.shape[1]/6)
+    upper_xval = int(bin_center_x + binary_img.shape[1]/6)
+    y_val = binary_img.shape[0]
+    cropped_bin = binary_img[0:y_val,lower_xval:upper_xval]
+
+    cv.imshow("cropped_bin",cropped_bin)
+
     def moments_pass(moments):
         flag = moments['m00'] > LOWER_AREA and moments['m00'] < HIGHER_AREA
         flag = flag and moments['m10'] != 0
@@ -276,7 +282,7 @@ def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
         return flag
 
     # Get contours and hierarchy
-    contours, hierarchy = cv.findContours(binary_img, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv.findContours(cropped_bin, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     
     print("Number of contours = " + str(len(contours)))
 
@@ -298,17 +304,16 @@ def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
 
         centroids = np.resize(centroids, (num_contour, 2))
         
-        x_pts_cv = centroids[:,0][:]
+        x_pts_cv = centroids[:,0][:] + lower_xval 
         y_pts_cv = centroids[:,1][:]
-        print(centroids)
 
         x_pts_drone = np.zeros((len(centroids)))
         y_pts_drone = np.zeros((len(centroids)))
 
         # TODO: vectorize
         for i in range(len(centroids)):
-            x_pts_drone[i] = centroids[i][0]
-            y_pts_drone[i] = binary_img.shape[0] - centroids[i][1]
+            x_pts_drone[i] = x_pts_cv[i]
+            y_pts_drone[i] = binary_img.shape[0] - y_pts_cv[i]
  
         #for i in range(len(centroids)):
         #    cv.circle(img0, (int(centroids[i][0]),int(centroids[i][1])),1,(0,0,255),10)    
@@ -323,6 +328,31 @@ def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
     return flag, -1, -1, -1, -1
 
 
+def filter_points(x_pts, y_pts):
+
+    if x_pts.shape[0] == 0:
+        return 0
+
+    coords = np.stack((x_pts, y_pts), axis=1)
+    # Get vertical
+    iter = 0
+    m = 0.75
+
+    x_mean = np.median(coords[:,0][:])
+    x_std = np.std(coords[:,0][:])
+    coords_vert = np.zeros((coords.shape[0],coords.shape[1]))
+    points_number = 0
+    for i in range(len(coords)):
+        if(abs(coords[i][0] - x_mean) < m * x_std):
+            coords_vert[points_number][0] = coords[i][0]
+            coords_vert[points_number][1] = coords[i][1]
+            points_number += 1
+
+    coords_vert = np.resize(coords_vert, (points_number, 2))
+    # coords_vert = coords[abs(coords[:,0][:]-np.mean(coords[:,0][:])) < m * np.std(coords[:,0][:])]
+    return coords_vert #, coords_hor
+
+
 def yaw_angle_rads(X_pts, Y_pts):
     
     #Y_pts, X_pts = coordinates[:,0][:], coordinates[:,1][:]
@@ -331,9 +361,12 @@ def yaw_angle_rads(X_pts, Y_pts):
 
     m,b = np.polyfit(X_pts, Y_pts, deg = 1)
     
-
-    yaw_rad = - np.arctan(m)
+    if m >= 0:
+        yaw_rad = np.arctan(m)
     
+    if m < 0:
+        yaw_rad = np.arctan(m) + 3.1415
+
     return yaw_rad
 
 
