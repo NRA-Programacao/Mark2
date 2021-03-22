@@ -84,74 +84,187 @@ def binarization(imagem, noise_level = 1, threshold_type = "otsu", inv = "True")
     output_imgs = {"blur": blur_img, "contours": contours, "bw": bw_img, "thresh": thresh_img}
     return output_imgs
 
+def region_of_interest(image, three_channels = False):
 
-def linha_media(dilate_img, minLineLength = 100, maxLineGap = 20):
+    """
+        In this case, our region of interest corresponds to the central of the image(to focus on the central lane). We will apply the 'direction_by_10pts' or 'direction_by_moments'
+        in this region to obtain our points.
 
-    # Hough transform para obter as informações das faixas das extremidades
-    lines = cv.HoughLinesP(dilate_img, 1, np.pi/180, 100, minLineLength, maxLineGap)
+        -- (x_max - x_min) = width of the region, that's, 20% of total image width (image.shape[1]) 
+        -- y_max = height of the selected region is equal to the image height
+        -- mask = binary array of the same shape of 'image'. It's central elements are equal to 1. The others elements are equal to 0 
+    """
 
-    
-    # numero total de pontos (x,y) de 'lines'
-    n_points = lines.shape[0]
+    width = image.shape[1]
+    height = image.shape[0]
 
-    # redimensionando a matriz 'lines'
-    lines_reshape = np.reshape(lines, (n_points,4))
+    mask = np.zeros_like(image)
 
-    # x medio de interesse (aprox a linha do centro da pista): soma dos elementos das colunas 0.5*(sum x1 + sum x2)/n_points
-    x_med_road = int(0.5*(np.sum(lines_reshape, axis=0)[0] + np.sum(lines_reshape, axis=0)[2])/n_points)
-    
-    
-    #dimensoes da imagem original
-    altura, largura = dilate_img.shape[0], dilate_img.shape[1]
-    x_linha_media = int(0.5*largura)
+    x_min = int(0.4*width)
+    x_max = int(0.6*width)
+    y_min = 0
+    y_max = height
 
-    '''    Distância aproximada entre a linha media da imagem e a linha media da pista: 
-            -- distancia > 0 : tracejado da pista à direita da linha media da imagem
-            -- distancia < 0 : ''   ''  ''   ''   à esquerda da linha media da imagem
+    mask[y_min:y_max, x_min:x_max] = 1
+    region_of_interest = mask*image
+
+    return region_of_interest
+
+def direction_by_10pts(binary_img):
+
+    '''   
+        --- direction_by_10pts: 75% of binary_inv image is horizontally sliced (cropped) in 10 parts. We will then compute the non zeros
+        indexes of each part. After that, we calculate and return the centers, (y_center, x_center)_i (i = 0, 1,.., 9),  of all 
+        those parts. These point's coordinates will be the input of np.polyfit(X_pts, Y_pts, deg = 1) function. 
+
+        -- L: height of the region will be horizontally sliced.      
+        -- dL: height of each sliced part
+        -- y_min: slices begin at the point (y = y_min, x = 0)
+        -- IMPORTANT: x_min, x_max, y_min_y_max need to be the same of 'region_of_interest' function
+        -- pti (i = 0, 1, ..,9): coordinates of (y_center, x_center)_i (WITH RESPECT TO i-th SLICE'S COORDINATE SYSTEM). 
+                To correct the coordinates, we need to sum      y_center_i + (y_min + (i-1*dL))
+        -- yx_correction: array with the (i-1)*dL values
+        -- yx_cg_coordinates: all 10 (y_center, x_center) we will use as input of np.polyfit
     '''
-    distance =  x_med_road - x_linha_media 
+
+    height = binary_img.shape[0]
+    width = binary_img.shape[1]
     
-    linhas_outputs = {"lines": lines, "x_med_road": x_med_road, "distance": distance}
-
-    return linhas_outputs
-
-def masked_img(input_img, lines, x_med_estrada):
+    num_of_slices = 10
+    L = int(1*height)
+    dL = int(L/num_of_slices)
     
-    # Dimensoes
-    shape_mask = input_img.shape
-    altura, largura = shape_mask[0], shape_mask[1]
-    x_med_img = int(0.5*largura)
+    x_min = int(0.4*width)
+    x_max = int(0.6*width)
+    y_min = 0
+    y_max = height
+    
+                
+    pt0 = np.mean(np.nonzero(binary_img[y_min+0*dL:y_min+dL, x_min:x_max]), axis=1)
+    pt1 = np.mean(np.nonzero(binary_img[y_min+dL:y_min+2*dL, x_min:x_max]), axis=1)
+    pt2 = np.mean(np.nonzero(binary_img[y_min+2*dL:y_min+3*dL, x_min:x_max]), axis=1)
+    pt3 = np.mean(np.nonzero(binary_img[y_min+3*dL:y_min+4*dL, x_min:x_max]), axis=1)
+    pt4 = np.mean(np.nonzero(binary_img[y_min+4*dL:y_min+5*dL, x_min:x_max]), axis=1)
+    pt5 = np.mean(np.nonzero(binary_img[y_min+5*dL:y_min+6*dL, x_min:x_max]), axis=1)
+    pt6 = np.mean(np.nonzero(binary_img[y_min+6*dL:y_min+7*dL, x_min:x_max]), axis=1)
+    pt7 = np.mean(np.nonzero(binary_img[y_min+7*dL:y_min+8*dL, x_min:x_max]), axis=1)
+    pt8 = np.mean(np.nonzero(binary_img[y_min+8*dL:y_min+9*dL, x_min:x_max]), axis=1)
+    pt9 = np.mean(np.nonzero(binary_img[y_min+9*dL:y_min+10*dL, x_min:x_max]), axis=1)
 
-    # mascara
-    mask = np.zeros(shape_mask, dtype=np.uint8)
-
-    # linha media da imagem (x_linha_media) - linha verde
-    cv.line(mask, (x_med_img,0), (x_med_img,altura), (0,255,0), 3)
-           
-    if lines is not None:
-        # aproximadamente a linha media da pista (x_med) - linha vermelha
+    yx_correction = np.array([[y_min , x_min],[y_min + dL,x_min],[y_min + 2*dL,x_min],[y_min + 3*dL,x_min],[y_min + 4*dL,x_min],
+    [y_min + 5*dL,x_min],[y_min + 6*dL,x_min],[y_min + 7*dL,x_min],[y_min + 8*dL,x_min],[y_min + 9*dL,x_min]])
         
-        cv.line(mask, (x_med_estrada, 0), (x_med_estrada, altura), (0,0,255), 2)
-        #linhas das extremidades e do centro da pista (azuis)
-        for line in lines:
-            x1, y1, x2, y2 = line.reshape(4)
-            cv.line(mask, (x1,y1), (x2,y2), (255,0,0), 2)
+    yx_cg_coordinates = np.array([pt0,pt1, pt2, pt3,pt4, pt5, pt6,pt7, pt8, pt9]) + yx_correction
+    y_pts = yx_cg_coordinates[:,0][:]
+    x_pts = yx_cg_coordinates[:,1][:] 
+    # Removing possible "NaN" elements in our array
+    y_pts_no_nan = y_pts[np.logical_not(np.isnan(y_pts))]
+    x_pts_no_nan = x_pts[np.logical_not(np.isnan(x_pts))]
+    # yx_cg_coordinates_with_no_nan = [y_pts_no_nan, x_pts_no_nan]
+        
+    if x_pts_no_nan.shape[0] == 0 or y_pts_no_nan.shape[0] == 0:
+            flag = 0
+    else:
+        flag = 1
+    return flag, y_pts_no_nan, x_pts_no_nan
     
-    masked = cv.addWeighted(input_img, 1, mask, 0.9, 1 )
     
-    return masked
+    
+def direction_by_moments(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
 
-def display_HUD(input_img, lines = None, x_med_estrada = None, beta = 1, regiao = True ):
+    def moments_pass(moments):
+        flag = moments['m00'] > LOWER_AREA and moments['m00'] < HIGHER_AREA
+        flag = flag and moments['m10'] != 0
+        flag = flag and moments['m01'] != 0 
+        return flag
+
+    # Get contours and hierarchy
+    contours, hierarchy = cv.findContours(binary_img, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+    
+    # print("Number of contours = " + str(len(contours)))
+
+    if(len(contours) != 0):
+
+        areas = []
+        centroids = np.zeros((len(contours),2))
+        num_contour = 0
+
+        for i in range(len(contours)):
+            moments = cv.moments(contours[int(i)])
+            
+
+            if(moments_pass(moments)):
+                # print(moments_pass(moments))
+                # Cx = m10/m00, Cy = m01/m00
+                centroids[num_contour][0] = moments['m10']/moments['m00']
+                centroids[num_contour][1] = moments['m01']/moments['m00'] 
+                num_contour += 1
+
+        centroids = np.resize(centroids, (num_contour, 2))
+        
+        x_pts_cv = centroids[:,0][:]
+        y_pts_cv = centroids[:,1][:]
+        # print(centroids)
+
+        x_pts_drone = np.zeros((len(centroids)))
+        y_pts_drone = np.zeros((len(centroids)))
+
+        # TODO: vectorize
+        for i in range(len(centroids)):
+            x_pts_drone[i] = centroids[i][0]
+            y_pts_drone[i] = binary_img.shape[0] - centroids[i][1]
+        
+ 
+        #for i in range(len(centroids)):
+        #    cv.circle(img0, (int(centroids[i][0]),int(centroids[i][1])),1,(0,0,255),10)    
+        
+        if x_pts_drone.shape[0] == 0 or y_pts_drone.shape[0] == 0:
+            flag = 0
+        else:
+            flag = 1
+        return flag, y_pts_drone, x_pts_drone, y_pts_cv, x_pts_cv 
+
+    flag = 0
+    return flag, -1, -1, -1, -1
+
+def yaw_angle_rads(X_pts, Y_pts):
+    
+    #Y_pts, X_pts = coordinates[:,0][:], coordinates[:,1][:]
+    if X_pts.shape[0] <= 1 and Y_pts.shape[0] <= 1:
+        return 0
+
+    m,b = np.polyfit(X_pts, Y_pts, deg = 1)
+    
+
+    # yaw_rad = - np.arctan(m)
+    yaw_rad_in_arctan_domain = - np.arctan(m)
+
+    if yaw_rad_in_arctan_domain >= 0:
+        yaw_rad_in_arccos_domain = yaw_rad_in_arctan_domain
+    else:
+        yaw_rad_in_arccos_domain = np.pi + yaw_rad_in_arctan_domain
+
+    
+    return yaw_rad_in_arccos_domain
+
+def draw_circles(image ,x_pts, y_pts):
+    
+    # y_pts, x_pts = coordinates[:,0][:], coordinates[:,1][:]
+    for i in range(len(y_pts)):
+        cv.circle(image, (int(x_pts[i]),int(y_pts[i])), radius = 3, color = (0,0,255), thickness=-1)
+
+def display_HUD(input_img, lines = None, x_med_estrada = None, beta = 1, region = True ):
     
     # Dimensoes
     shape_mask = input_img.shape
     height, width = shape_mask[0], shape_mask[1]
     x_med_img = int(0.5*width)
 
+    # Central region of the image
     y_max = height
-    y_min = int(0.25*height)
-    x_max = int(0.75*width)
-    x_min = int(0.25*width)
+    y_min = 0
+    x_max = int(0.60*width)
+    x_min = int(0.40*width)
 
     # mascara
     mask = np.zeros(shape_mask, dtype=np.uint8)
@@ -163,7 +276,7 @@ def display_HUD(input_img, lines = None, x_med_estrada = None, beta = 1, regiao 
         cv.line(mask, pt1 = (x_med_img , int((y_max+y_min)*0.5)), pt2 = (x_med_img,y_min), color = (10,200,10),thickness= 1)
         cv.line(mask, pt1 = (x_min , int((y_max+y_min)*0.5)),pt2 = (x_max ,int((y_max+y_min)*0.5)), color =(10,200,10), thickness=1 )
         '''   Mostra a região retangular de interesse   '''
-        if regiao == True:
+        if region == True:
             retangulo = cv.rectangle(mask, (x_min, y_min), (x_max, y_max), (10,150,10), 1)
     HUD()
 
@@ -183,17 +296,23 @@ def display_HUD(input_img, lines = None, x_med_estrada = None, beta = 1, regiao 
     
     return hud_on_img
 
-def display_line_of_orientation(image, yaw_angle_rads, x_to_compute_distance = None, line_length = 50, beta = 1):
-     
+def display_line_of_orientation(image, yaw_angle_rads, x_to_compute_distance = None, line_length = 100, beta = 1, put_text = False):
+    
+    '''
+        The "line of orientation" help us to visualize the direction computed by 'yaw_angle_rads'.
+        -- In putText, yaw corresponds to the angle (in deg) between the line of orientation and the vertical. That's, 90 - angle_deg 
+            
+          
+    '''
     height = image.shape[0]
     width = image.shape[1]
     
     mask = np.zeros(image.shape, dtype=np.uint8)
-    
+
     sin = np.sin(yaw_angle_rads)
     cos = np.cos(yaw_angle_rads)
     
-    y1 = int(0.625*height)
+    y1 = int(0.5*height)
     if x_to_compute_distance is not None:
         x1 = int(x_to_compute_distance - 0.5*width)
     else:
@@ -206,167 +325,18 @@ def display_line_of_orientation(image, yaw_angle_rads, x_to_compute_distance = N
     
     line_on_img = cv.addWeighted(image, 1, mask, beta, 1)
     
+    if put_text == True:
+        font = cv.FONT_HERSHEY_SIMPLEX
+        angle_deg = yaw_angle_rads*180/3.14
+        text = "yaw= " + str(90 - angle_deg)[:5] + " deg"
+        cv.putText(line_on_img, text, (10, height - 20), font, 0.5, (255, 255, 255), 2, cv.LINE_AA)
+    
     return line_on_img
 
-def draw_circles(image ,coordinates):
-    
-    y_pts, x_pts = coordinates[:,0][:], coordinates[:,1][:]
-         
-    for i in range(len(y_pts)):
-        cv.circle(image, (int(x_pts[i]),int(y_pts[i])),1,(0,0,255),5)
-
-    
-def direction_by_10pts(binary_img):
-
-    '''   
-        --- direction_by_10pts: 75% of binary_inv image is horizontally sliced (cropped) in 10 parts. We will then compute the non zeros
-        indexes of each part. After that, we calculate and return the centers, (y_center, x_center)_i (i = 0, 1,.., 9),  of all 
-        those parts. These point's coordinates will be the input of np.polyfit(X_pts, Y_pts, deg = 1) function. 
-
-        -- L: height of the region will be horizontally sliced. That is 75% of image's total height      
-        -- dL: height of each sliced part
-        -- y0: slices begin at the point (y = y0, x = 0). That is 0.25*height = height - L
-        -- pti (i = 0, 1, ..,9): coordinates of (y_center, x_center)_i (WITH RESPECT TO i-th SLICE'S COORDINATE SYSTEM). 
-                To correct the coordinates, we need to sum      y_center_i + (y0 + (i-1*dL))
-        -- yx_correction: array with the (i-1)*dL values
-        -- yx_cg_coordinates: all 10 (y_center, x_center) we will use as input of np.polyfit
-    '''
-
-    height = binary_img.shape[0]
-    width = binary_img.shape[1]
-    
-    num_of_slices = 10
-    L = int(0.75*height)
-    dL = int(L/num_of_slices)
-    x_min = int(0.25*width)
-    x_max = int(0.75*width)
-    
-    y0 = height - L
-        
-    if np.nonzero(binary_img[y0:,:]) is not None:
-        pt0 = np.mean(np.nonzero(binary_img[y0+0*dL:y0+dL, x_min:x_max]), axis=1)
-        pt1 = np.mean(np.nonzero(binary_img[y0+dL:y0+2*dL, x_min:x_max]), axis=1)
-        pt2 = np.mean(np.nonzero(binary_img[y0+2*dL:y0+3*dL, x_min:x_max]), axis=1)
-        pt3 = np.mean(np.nonzero(binary_img[y0+3*dL:y0+4*dL, x_min:x_max]), axis=1)
-        pt4 = np.mean(np.nonzero(binary_img[y0+4*dL:y0+5*dL, x_min:x_max]), axis=1)
-        pt5 = np.mean(np.nonzero(binary_img[y0+5*dL:y0+6*dL, x_min:x_max]), axis=1)
-        pt6 = np.mean(np.nonzero(binary_img[y0+6*dL:y0+7*dL, x_min:x_max]), axis=1)
-        pt7 = np.mean(np.nonzero(binary_img[y0+7*dL:y0+8*dL, x_min:x_max]), axis=1)
-        pt8 = np.mean(np.nonzero(binary_img[y0+8*dL:y0+9*dL, x_min:x_max]), axis=1)
-        pt9 = np.mean(np.nonzero(binary_img[y0+9*dL:y0+10*dL, x_min:x_max]), axis=1)
-
-        yx_correction = np.array([[y0 , x_min],[y0 + dL,x_min],[y0 + 2*dL,x_min],[y0 + 3*dL,x_min],[y0 + 4*dL,x_min],
-        [y0 + 5*dL,x_min],[y0 + 6*dL,x_min],[y0 + 7*dL,x_min],[y0 + 8*dL,x_min],[y0 + 9*dL,x_min]])
-            
-        yx_cg_coordinates = np.array([pt0,pt1, pt2, pt3,pt4, pt5, pt6,pt7, pt8, pt9]) + yx_correction
-        
-        return yx_cg_coordinates
-    else:
-        print("direction_by_10pts() function: there is no nonzero point detected ")
-        return None
 
 
 
-def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
-
-    def moments_pass(moments):
-        flag = moments['m00'] > LOWER_AREA and moments['m00'] < HIGHER_AREA
-        flag = flag and moments['m10'] != 0
-        flag = flag and moments['m01'] != 0 
-        return flag
-
-    # Get contours and hierarchy
-    contours, hierarchy = cv.findContours(binary_img, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-    
-    print("Number of contours = " + str(len(contours)))
-
-    if(len(contours) != 0):
-
-        areas = []
-        centroids = np.zeros((len(contours),2))
-        num_contour = 0
-
-        for i in range(len(contours)):
-            moments = cv.moments(contours[int(i)])
-
-            if(moments_pass(moments)):
-                print(moments_pass(moments))
-                # Cx = m10/m00, Cy = m01/m00
-                centroids[num_contour][0] = moments['m10']/moments['m00']
-                centroids[num_contour][1] = moments['m01']/moments['m00'] 
-                num_contour += 1
-
-        centroids = np.resize(centroids, (num_contour, 2))
-        
-        x_pts_cv = centroids[:,0][:]
-        y_pts_cv = centroids[:,1][:]
-        print(centroids)
-
-        x_pts_drone = np.zeros((len(centroids)))
-        y_pts_drone = np.zeros((len(centroids)))
-
-        # TODO: vectorize
-        for i in range(len(centroids)):
-            x_pts_drone[i] = centroids[i][0]
-            y_pts_drone[i] = binary_img.shape[0] - centroids[i][1]
- 
-        #for i in range(len(centroids)):
-        #    cv.circle(img0, (int(centroids[i][0]),int(centroids[i][1])),1,(0,0,255),10)    
-        
-        if x_pts_drone.shape[0] == 0 or y_pts_drone.shape[0] == 0:
-            flag = 0
-        else:
-            flag = 1
-        return flag, y_pts_drone, x_pts_drone, y_pts_cv, x_pts_cv 
-
-    flag = 0
-    return flag, -1, -1, -1, -1
 
 
-def yaw_angle_rads(X_pts, Y_pts):
-    
-    #Y_pts, X_pts = coordinates[:,0][:], coordinates[:,1][:]
-    if X_pts.shape[0] <= 1 and Y_pts.shape[0] <= 1:
-        return 0
-
-    m,b = np.polyfit(X_pts, Y_pts, deg = 1)
-    
-
-    yaw_rad = - np.arctan(m)
-    
-    return yaw_rad
 
 
-def add_gaussian_noise(image):
-    mean = 0
-    var = 0.1
-    sigma = var**0.5
-    row, col, ch = image.shape
-    gauss = np.random.normal(mean, sigma, image.shape)
-    gauss = gauss.reshape(row, col, ch)
-    noisy = image + gauss
-    
-    return noisy
-
-
-# imagens = remove_noise(original, noise_level=3)
-# dilate = imagens["dilate"]
-# blur = imagens["blur"]
-
-# lines, x_med_estrada, distance = linha_media(dilate)["lines"], linha_media(dilate)["x_med_road"], linha_media(dilate)["distance"] 
-
-# final_img = masked_img(blur, lines, x_med_estrada)
-
-# show_img(img0, "img0")
-# show_img(blur_img, "blur 2x")
-# show_img(bw_img, "2xblur -> preto e branco")
-# show_img(opening5, "bw_img -> opening5")
-# show_img(binary_img, "binaria")
-# show_img(canny, "canny")
-# # show_img(canny_dir, "canny em bw_img")
-# show_img(dilat, "dilate")
-# show_img(final_img, "Imagem final")
-
-
-# cv.waitKey(0)
-# cv.destroyAllWindows()
