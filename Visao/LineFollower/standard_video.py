@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+import time
 import lines_tools as ltools
 
 '''   Video processing    '''
@@ -14,21 +15,6 @@ def show_img(image, name):
     cv.namedWindow(name, cv.WINDOW_GUI_EXPANDED)
     cv.imshow(name, image)
     
-
-def nothing(x):
-    pass
-
-cv.namedWindow("Trackbars")
-cv.createTrackbar("L-H", "Trackbars", 0, 255, nothing)
-cv.createTrackbar("L-S", "Trackbars", 0, 255, nothing)
-cv.createTrackbar("L-V", "Trackbars", 0, 255, nothing)
-cv.createTrackbar("U-H", "Trackbars", 0, 255, nothing)
-cv.createTrackbar("U-S", "Trackbars", 0, 255, nothing)
-cv.createTrackbar("U-V", "Trackbars", 0, 255, nothing)
-
-
-
-# Show video
 while True:
     # Capture frame by frame    
     ret, frame = cap.read()
@@ -54,15 +40,15 @@ while True:
     lower_moments = np.array([0, 0, 100])
     upper_moments = np.array([255, 255, 255])
     mask_moments = cv.inRange(hsv, lower_moments, upper_moments)
-    binary_of_interest_moments = ltools.region_of_interest(mask_moments)
+        
+    flag_moments, y_pts_moments, x_pts_moments = ltools.direction_by_moments(mask_moments, remove_outliers=True)
     
-    flag_moments, y_pts_drone, x_pts_drone, y_pts_cv, x_pts_cv = ltools.direction_by_moments(binary_of_interest_moments)
     
     if flag_moments == 1:
-        yaw_moments = ltools.yaw_angle_rads(x_pts_drone, y_pts_drone)
+        yaw_moments = ltools.yaw_angle_rads(x_pts_moments, y_pts_moments)
         hud_moments_img = ltools.display_HUD(blur)
         direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, put_text=True )
-        ltools.draw_circles(direction_by_moments_img, x_pts_cv, y_pts_cv)
+        ltools.draw_circles(direction_by_moments_img, x_pts_moments, y_pts_moments, circ_color= (0,255,00))
         ltools.show_img(direction_by_moments_img, "Direction by moments")
 
 
@@ -70,15 +56,14 @@ while True:
     lower_10pts = np.array([0, 0, 0])
     upper_10pts = np.array([0, 0, 5])
     mask_10pts = cv.inRange(hsv, lower_10pts, upper_10pts)
-    binary_of_interest_10pts = ltools.region_of_interest(mask_10pts)
-
-    flag_10pts, y_10pts, x_10pts = ltools.direction_by_10pts(binary_of_interest_10pts)
+    
+    flag_10pts, y_10pts, x_10pts = ltools.direction_by_10pts(mask_10pts, remove_outliers=True)
     
     if flag_10pts == 1:
         yaw_10pts = ltools.yaw_angle_rads(x_10pts, y_10pts)
         hud_10pts_img = ltools.display_HUD(blur)
         direction_by_10pts_img = ltools.display_line_of_orientation(hud_10pts_img, yaw_10pts, put_text=True)
-        ltools.draw_circles(direction_by_10pts_img, x_10pts, y_10pts)
+        ltools.draw_circles(direction_by_10pts_img, x_10pts, y_10pts, circ_color= (0,255,00))
         ltools.show_img(direction_by_10pts_img, "Direction by 10 pts")
     
     ##uncomment to show masks
