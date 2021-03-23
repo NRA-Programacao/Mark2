@@ -262,8 +262,6 @@ def direction_by_10pts(binary_img):
         print("direction_by_10pts() function: there is no nonzero point detected ")
         return None
 
-
-
 def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
 
     # Crop binary image for vertical analisys
@@ -327,7 +325,6 @@ def direction_by_lane_center(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000):
     flag = 0
     return flag, -1, -1, -1, -1
 
-
 def filter_points(x_pts, y_pts):
 
     if x_pts.shape[0] == 0:
@@ -338,10 +335,11 @@ def filter_points(x_pts, y_pts):
     iter = 0
     m = 0.75
 
-    x_mean = np.median(coords[:,0][:])
+    x_median = np.median(coords[:,0][:])
     x_std = np.std(coords[:,0][:])
     coords_vert = np.zeros((coords.shape[0],coords.shape[1]))
     points_number = 0
+    
     for i in range(len(coords)):
         if(abs(coords[i][0] - x_mean) < m * x_std):
             coords_vert[points_number][0] = coords[i][0]
@@ -351,7 +349,6 @@ def filter_points(x_pts, y_pts):
     coords_vert = np.resize(coords_vert, (points_number, 2))
     # coords_vert = coords[abs(coords[:,0][:]-np.mean(coords[:,0][:])) < m * np.std(coords[:,0][:])]
     return coords_vert #, coords_hor
-
 
 def yaw_angle_rads(X_pts, Y_pts):
     
@@ -369,7 +366,6 @@ def yaw_angle_rads(X_pts, Y_pts):
 
     return yaw_rad
 
-
 def add_gaussian_noise(image):
     mean = 0
     var = 0.1
@@ -380,26 +376,3 @@ def add_gaussian_noise(image):
     noisy = image + gauss
     
     return noisy
-
-
-# imagens = remove_noise(original, noise_level=3)
-# dilate = imagens["dilate"]
-# blur = imagens["blur"]
-
-# lines, x_med_estrada, distance = linha_media(dilate)["lines"], linha_media(dilate)["x_med_road"], linha_media(dilate)["distance"] 
-
-# final_img = masked_img(blur, lines, x_med_estrada)
-
-# show_img(img0, "img0")
-# show_img(blur_img, "blur 2x")
-# show_img(bw_img, "2xblur -> preto e branco")
-# show_img(opening5, "bw_img -> opening5")
-# show_img(binary_img, "binaria")
-# show_img(canny, "canny")
-# # show_img(canny_dir, "canny em bw_img")
-# show_img(dilat, "dilate")
-# show_img(final_img, "Imagem final")
-
-
-# cv.waitKey(0)
-# cv.destroyAllWindows()
