@@ -5,7 +5,7 @@ import lines_tools as ltools
 '''   Video processing    '''
 # Video capture do apk 'DroidCam'
 droidcam = 'http://192.168.0.25:4747/video'
-gazebo_video = "gazebo01.webm"
+gazebo_video = "/home/lucas/Documents/Codes/PyProjects/02_lane_detection/01_videosrc/gazebo01.webm"
 cap = cv.VideoCapture(gazebo_video)
 
 # Show image function
@@ -45,8 +45,8 @@ while True:
     u_v = cv.getTrackbarPos("U-V", "Trackbars")
 
     # src images to both methods
-    imagens = ltools.binarization(frame, noise_level=1, threshold_type="global")
-    blur = imagens["blur"]
+    # imagens = ltools.binarization(frame, noise_level=1, threshold_type="global")
+    blur = cv.GaussianBlur(frame, (5,5), 1)
     hsv = cv.cvtColor(blur, cv.COLOR_BGR2HSV)
     
     
@@ -61,7 +61,7 @@ while True:
     if flag_moments == 1:
         yaw_moments = ltools.yaw_angle_rads(x_pts_drone, y_pts_drone)
         hud_moments_img = ltools.display_HUD(blur)
-        direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, put_text=True)
+        direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, put_text=True )
         ltools.draw_circles(direction_by_moments_img, x_pts_cv, y_pts_cv)
         ltools.show_img(direction_by_moments_img, "Direction by moments")
 
