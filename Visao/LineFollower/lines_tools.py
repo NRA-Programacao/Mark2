@@ -230,7 +230,7 @@ def direction_by_moments(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000, remove
             flag = 1
             if remove_outliers == True:
                 x_pts_cv, y_pts_cv = filter_points(x_pts_cv, y_pts_cv)
-                
+
         return flag, y_pts_cv, x_pts_cv 
 
     flag = 0
@@ -266,6 +266,33 @@ def yaw_angle_rads(X_pts, Y_pts):
         yaw_rad_in_arccos_domain = np.pi + yaw_rad_in_arctan_domain
 
     return yaw_rad_in_arccos_domain
+
+def yaw_angle_rads_alternative(X_pts, Y_pts):
+    if X_pts.shape[0] <= 1 and Y_pts.shape[0] <= 1:
+        return 0
+
+    n = len(X_pts)
+    X1 = X_pts[:n-1]
+    Y1 = Y_pts[:n-1]
+    X2 = X_pts[1:]
+    Y2 = Y_pts[1:]
+    
+    dY = Y2 - Y1 
+    dX = X2 - X1 + 1e-5
+
+    M = dY/dX
+    m = np.mean(M)
+
+    yaw_rad_in_arctan_domain = - np.arctan(m)
+
+    if yaw_rad_in_arctan_domain >= 0:
+        yaw_rad_in_arccos_domain = yaw_rad_in_arctan_domain
+    else:
+        yaw_rad_in_arccos_domain = np.pi + yaw_rad_in_arctan_domain
+
+    return yaw_rad_in_arccos_domain    
+
+
 
 def draw_circles(image ,x_pts, y_pts, circ_color = (0,0,255)):
     

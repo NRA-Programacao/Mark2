@@ -23,12 +23,12 @@ while True:
     # frame = cv.flip(frame, 1)[:,10:]
 
     
-    l_h = cv.getTrackbarPos("L-H", "Trackbars")
-    l_s = cv.getTrackbarPos("L-S", "Trackbars")
-    l_v = cv.getTrackbarPos("L-V", "Trackbars")
-    u_h = cv.getTrackbarPos("U-H", "Trackbars")
-    u_s = cv.getTrackbarPos("U-S", "Trackbars")
-    u_v = cv.getTrackbarPos("U-V", "Trackbars")
+    # l_h = cv.getTrackbarPos("L-H", "Trackbars")
+    # l_s = cv.getTrackbarPos("L-S", "Trackbars")
+    # l_v = cv.getTrackbarPos("L-V", "Trackbars")
+    # u_h = cv.getTrackbarPos("U-H", "Trackbars")
+    # u_s = cv.getTrackbarPos("U-S", "Trackbars")
+    # u_v = cv.getTrackbarPos("U-V", "Trackbars")
 
     # src images to both methods
     # imagens = ltools.binarization(frame, noise_level=1, threshold_type="global")
@@ -45,26 +45,26 @@ while True:
     
     
     if flag_moments == 1:
-        yaw_moments = ltools.yaw_angle_rads(x_pts_moments, y_pts_moments)
+        yaw_moments = ltools.yaw_angle_rads_alternative(x_pts_moments, y_pts_moments)
         hud_moments_img = ltools.display_HUD(blur)
         direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, put_text=True )
-        ltools.draw_circles(direction_by_moments_img, x_pts_moments, y_pts_moments, circ_color= (0,255,00))
+        ltools.draw_circles(direction_by_moments_img, x_pts_moments, y_pts_moments)
         ltools.show_img(direction_by_moments_img, "Direction by moments")
 
 
-    '''direction by 10pts method:'''
-    lower_10pts = np.array([0, 0, 0])
-    upper_10pts = np.array([0, 0, 5])
-    mask_10pts = cv.inRange(hsv, lower_10pts, upper_10pts)
+    # '''direction by 10pts method:'''
+    # lower_10pts = np.array([0, 0, 0])
+    # upper_10pts = np.array([0, 0, 5])
+    # mask_10pts = cv.inRange(hsv, lower_10pts, upper_10pts)
     
-    flag_10pts, y_10pts, x_10pts = ltools.direction_by_10pts(mask_10pts, remove_outliers=True)
+    # flag_10pts, y_10pts, x_10pts = ltools.direction_by_10pts(mask_10pts, remove_outliers=True)
     
-    if flag_10pts == 1:
-        yaw_10pts = ltools.yaw_angle_rads(x_10pts, y_10pts)
-        hud_10pts_img = ltools.display_HUD(blur)
-        direction_by_10pts_img = ltools.display_line_of_orientation(hud_10pts_img, yaw_10pts, put_text=True)
-        ltools.draw_circles(direction_by_10pts_img, x_10pts, y_10pts, circ_color= (0,255,00))
-        ltools.show_img(direction_by_10pts_img, "Direction by 10 pts")
+    # if flag_10pts == 1:
+    #     yaw_10pts = ltools.yaw_angle_rads_alternative(x_10pts, y_10pts)
+    #     hud_10pts_img = ltools.display_HUD(blur)
+    #     direction_by_10pts_img = ltools.display_line_of_orientation(hud_10pts_img, yaw_10pts, put_text=True)
+    #     ltools.draw_circles(direction_by_10pts_img, x_10pts, y_10pts)
+    #     ltools.show_img(direction_by_10pts_img, "Direction by 10 pts")
     
     ##uncomment to show masks
     # show_img(mask_moments, "mask_moments")
