@@ -161,11 +161,30 @@ def direction_by_10pts(binary_img, remove_outliers = False):
     pt7 = np.mean(np.nonzero(bin_of_interest[y_min+7*dL:y_min+8*dL,:]), axis=1)
     pt8 = np.mean(np.nonzero(bin_of_interest[y_min+8*dL:y_min+9*dL,:]), axis=1)
     pt9 = np.mean(np.nonzero(bin_of_interest[y_min+9*dL:y_min+10*dL,:]), axis=1)
-    
-    yx_correction = np.array([[y_min , 0],[y_min + dL,0],[y_min + 2*dL,0],[y_min + 3*dL,0],[y_min + 4*dL,0],
-    [y_min + 5*dL,0],[y_min + 6*dL,0],[y_min + 7*dL,0],[y_min + 8*dL,0],[y_min + 9*dL,0]])
 
+    yx_correction = np.array([[y_min , 0],[y_min + dL,0],[y_min + 2*dL,0],[y_min + 3*dL,0],[y_min + 4*dL,0],
+    [y_min + 5*dL,0],[y_min + 6*dL,0],[y_min + 7*dL,0],[y_min + 8*dL,0],[y_min + 9*dL,0]])    
     yx_cg_coordinates = np.array([pt0,pt1, pt2, pt3,pt4, pt5, pt6,pt7, pt8, pt9]) + yx_correction
+    
+    ## uncomment to use 20pts instead of 10
+    # pt10 = np.mean(np.nonzero(bin_of_interest[y_min+10*dL:y_min+11*dL,:]), axis=1)
+    # pt11 = np.mean(np.nonzero(bin_of_interest[y_min+11*dL:y_min+12*dL,:]), axis=1)
+    # pt12 = np.mean(np.nonzero(bin_of_interest[y_min+12*dL:y_min+13*dL,:]), axis=1)
+    # pt13 = np.mean(np.nonzero(bin_of_interest[y_min+13*dL:y_min+14*dL,:]), axis=1)
+    # pt14 = np.mean(np.nonzero(bin_of_interest[y_min+14*dL:y_min+15*dL,:]), axis=1)
+    # pt15 = np.mean(np.nonzero(bin_of_interest[y_min+15*dL:y_min+16*dL,:]), axis=1)
+    # pt16 = np.mean(np.nonzero(bin_of_interest[y_min+16*dL:y_min+17*dL,:]), axis=1)
+    # pt17 = np.mean(np.nonzero(bin_of_interest[y_min+17*dL:y_min+18*dL,:]), axis=1)
+    # pt18 = np.mean(np.nonzero(bin_of_interest[y_min+18*dL:y_min+19*dL,:]), axis=1)
+    # pt19 = np.mean(np.nonzero(bin_of_interest[y_min+19*dL:y_min+20*dL,:]), axis=1)
+    
+    # yx_correction = np.array([[y_min , 0],[y_min + dL,0],[y_min + 2*dL,0],[y_min + 3*dL,0],[y_min + 4*dL,0],
+    # [y_min + 5*dL,0],[y_min + 6*dL,0],[y_min + 7*dL,0],[y_min + 8*dL,0],[y_min + 9*dL,0],
+    # [y_min + 10*dL , 0],[y_min + 11*dL,0],[y_min + 12*dL,0],[y_min + 13*dL,0],[y_min + 14*dL,0],
+    # [y_min + 15*dL,0],[y_min + 16*dL,0],[y_min + 17*dL,0],[y_min + 18*dL,0],[y_min + 19*dL,0]
+    # ])
+
+    # yx_cg_coordinates = np.array([pt0,pt1, pt2, pt3,pt4, pt5, pt6,pt7, pt8, pt9, pt10, pt11, pt12, pt13, pt14, pt15, pt16, pt17, pt18, pt19 ]) + yx_correction
     y_pts = yx_cg_coordinates[:,0][:]
     x_pts = yx_cg_coordinates[:,1][:] 
     # Removing possible "NaN" elements in our array
@@ -367,7 +386,7 @@ def display_line_of_orientation(image, yaw_angle_rads, x_to_compute_distance = N
     y2 = y1 - np.int(line_length*sin)
     x2 = x1 + np.int(line_length*cos)
 
-    cv.line(mask, pt1 = (x1,y1), pt2 = (x2, y2), color = (0,0,255),thickness= 2)
+    cv.line(mask, pt1 = (x1,y1), pt2 = (x2, y2), color = (0,0,255),thickness = 2)
     
     line_on_img = cv.addWeighted(image, 1, mask, beta, 1)
     

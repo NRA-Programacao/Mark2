@@ -6,7 +6,7 @@ import lines_tools as ltools
 '''   Video processing    '''
 # Video capture do apk 'DroidCam'
 droidcam = 'http://192.168.0.25:4747/video'
-gazebo_video = "/home/lucas/Documents/Codes/PyProjects/02_lane_detection/01_videosrc/gazebo01.webm"
+gazebo_video = "./tentativa4-2021-03-16_14.29.webm"
 cap = cv.VideoCapture(gazebo_video)
 
 # Show image function
@@ -47,7 +47,7 @@ while True:
     if flag_moments == 1:
         yaw_moments = ltools.yaw_angle_rads_alternative(x_pts_moments, y_pts_moments)
         hud_moments_img = ltools.display_HUD(blur)
-        direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, put_text=True )
+        direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, line_length=150 ,put_text=True )
         ltools.draw_circles(direction_by_moments_img, x_pts_moments, y_pts_moments)
         ltools.show_img(direction_by_moments_img, "Direction by moments")
 
