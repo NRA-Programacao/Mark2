@@ -31,12 +31,15 @@ def yaw_callback(ros_image):
     upper_moments = np.array([255, 255, 255])
     # imagem binaria:
     mask_moments = cv2.inRange(hsv, lower_moments, upper_moments)
-        
+    binary_of_interest = ltools.region_of_interest(mask_moments)
+    
     flag_moments, y_pts_moments, x_pts_moments = ltools.direction_by_moments(mask_moments, remove_outliers=True)
     
     if flag_moments == 1:
       yaw_moments = ltools.yaw_angle_rads_alternative(x_pts_moments, y_pts_moments)
       yaw_cv = np.pi/2 - yaw_moments
+      ltools.show_img(binary_of_interest, "Threshold image")
+      cv2.waitKey(1)
       ## Descomentar as linhas abaixo para visualisar o HUD e o vetor de orientação
       # hud_moments_img = ltools.display_HUD(blur)
       # direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments, line_length=150 ,put_text=True )
