@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+#mudar o python3 para a sua versão do python
 import rospy                                  #biblioteca padão para trabalhar com ros em python
 import cv2                                    #biblioteca para trabalhar Opencv
 from std_msgs.msg import String               #biblioteca para trabalhar com as std_msgs (strings)
