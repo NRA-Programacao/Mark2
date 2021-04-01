@@ -1,14 +1,23 @@
 #ifndef MARCOS_BIB
 #define MARCOS_BIB
 
-float targetObj[3];//x, y, z
-float particlesTargetVelocities[4] = {0, 0, 0, 0};
+float targetObj[3]; //x, y, z
+float particlesTargetVelocities[4] = {0, 0, 0, 0}; //velocidades dos motores
 
+//Parametros PID
 int pParam=2;
 int iParam=0;
 int dParam=0;
 int vParam=-2;
 
+float attKp = 0.25;
+float attKd = 2.10;
+float posKp = 0.005;
+float posKd = 1.000;
+float posKi = 0.003;
+// fim dos parametros PID
+
+//Erros
 float cumul=0;
 float lastE=0;
 float pAlphaE=0;
@@ -27,17 +36,13 @@ float KwP2Controller = 0.4;
 float p2tau[3] = {0,0,0};
 float qs[4] = {1,0,0,0};
 
-float attKp = 0.25;
-float attKd = 2.10;
-float posKp = 0.005;
-float posKd = 1.000;
-float posKi = 0.003;
+//quaternion ref, r,p,y zero
+float p0=1, p1=0, p2=0, p3=0; 
 
-float p0=1, p1=0, p2=0, p3=0; //quaternion ref, r,p,y zero
-
-float Ts;
+float Ts; // tempo de simulação
 //filtro de kalman: orient, pos, vel
 //sens: accel, ang vel
+
 /*  dados vindos da DAQ */
 float gps_xyz[3];
 float drone_pos[3];//orientacao + pos (?)
