@@ -206,3 +206,60 @@ void modelagem()//depois melhora o nome ou divide em mais funções
 	
 	a_z = (2*rho_s*A)/M*pow((f*eta*K_p)/K_q)*(pow(V_1, 2) + pow(V_2, 2) + pow(V_3, 2) + pow(V_4, 2))*cos(Theta)*cos(Phi) - g;//aceleração vertical
 }
+
+void modelagem()//depois melhora o nome ou divide em mais funções
+{
+float F_m[4], F[3] = {0,0,0};
+// vz = w
+float vz, p, q, xin[4]; // p e q é velocidade angular em pitch e roll
+float U_h, U_phi, U_theta, U_psi;
+float accx, accy, accz, acc_psi, acc_theta, acc_phi;
+float phi, psi, theta;
+float CT2s = -1.3077*pow(10,-2);
+float CT1s = -2.5224*pow(10,-4);
+float CT0s = 1.5393579917*pow(10,-5);
+float v_1[4] = {0,0,0,0};
+float l_m = 0.275; // Braço do drone
+float g = 9.81;
+float m = 1.477; //massa
+float m_M = 0.072;                                                    // [kg]      Masse Motor + Propeller 
+float m_R = 0.044;                                                    // [kg]      Masse motor
+float m_C = m - 4*m_M - 2*m_R;                                        // [kg]      Masse corpo (nucleo)
+float I_x = 2*m_M*pow(l_m,2) + 1/12*m_C*(2*pow(0.12,2)) + 1/12*m_R*pow((2*l_m),2);    
+float I_y = I_x;                                                      
+float I_z = 4*m_M*pow(l_m,2) + 1/12*m_C*(2*pow(0.12,2)) + 2*1/12*m_R*pow((2*l_m),2);; 
+
+
+v_1[0] = - vz + l_m*q;
+v_1[1] = - vz - l_m*p;
+v_1[2] = - vz - l_m*q;
+v_1[3] = - vz + l_m*p;
+
+//força dos motores
+for(int i=0; i<4; i++) 
+{
+// if the flow speed at infinity is negative
+    if (v_1[i] < 0){
+        F_m[i] = CT2s*pow(v_1[i],2) + CT1s*v_1[i]*xin[i] + CT0s*pow(xin[i],2);}
+        //if the flow speed at infinity is positive
+    else{
+        F_m[i] = -CT2s*pow(v_1[i],2) + CT1s*v_1[i]*xin[i] + CT0s*pow(xin[i],2);
+    }
+    //sum up all rotor forces
+    F[2] = F[2] + F_m[i];
+  }
+U_h = F[2];
+U_phi = (F_m[2] - F_m[4])*l_m;
+U_theta = (F_m[3] - F_m[1])*l_m;
+U_psi = F_m[1] + F_m[3] - F_m[2] - F_m[4];
+	
+//acelerações
+accx = U_h*(sin(psi)*sin(phi)+cos(psi)*sin(theta)*cos(phi))/m;
+accy = U_h*(sin(psi)*sin(theta)*cos(phi) -cos(psi)*sin(phi))/m;
+accz = U_h*(cos(phi)*cos(theta))/m - g;
+acc_phi = U_phi/I_x;
+acc_theta = U_theta/I_y;
+acc_psi = U_psi/I_z;
+
+}
+	
