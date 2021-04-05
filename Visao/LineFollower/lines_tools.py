@@ -199,9 +199,7 @@ def direction_by_10pts(binary_img, remove_outliers = False):
             x_pts_no_nan_cv, y_pts_no_nan_cv = filter_points(x_pts_no_nan_cv, y_pts_no_nan_cv)
     
     return flag, y_pts_no_nan_cv, x_pts_no_nan_cv
-    
-    
-    
+       
 def direction_by_moments(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000, remove_outliers = False):
 
     
@@ -222,17 +220,16 @@ def direction_by_moments(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000, remove
        
     if(len(contours) != 0):
 
-        areas = []
+        areas = np.zeros(len(contours))
         centroids = np.zeros((len(contours),2))
         num_contour = 0
-
         for i in range(len(contours)):
             moments = cv.moments(contours[int(i)])
             
-
             if(moments_pass(moments)):
                 # print(moments_pass(moments))
                 # Cx = m10/m00, Cy = m01/m00
+                areas[num_contour] = moments['m00']
                 centroids[num_contour][0] = moments['m10']/moments['m00']
                 centroids[num_contour][1] = moments['m01']/moments['m00'] 
                 num_contour += 1
@@ -246,14 +243,18 @@ def direction_by_moments(binary_img, LOWER_AREA = 10, HIGHER_AREA = 1000, remove
         if x_pts_cv.shape[0] == 0 or y_pts_cv.shape[0] == 0:
             flag = 0
         else:
-            flag = 1
+            
             if remove_outliers == True:
                 x_pts_cv, y_pts_cv = filter_points(x_pts_cv, y_pts_cv)
+                if x_pts_cv.shape[0] == 0 or y_pts_cv.shape[0] == 0:
+                    flag = 0
+                else:
+                    flag = 1
 
-        return flag, y_pts_cv, x_pts_cv 
+        return flag, y_pts_cv, x_pts_cv, areas 
 
     flag = 0
-    return flag, -1, -1, -1, -1
+    return flag, -1, -1, -1
 
 def filter_points(x_pts, y_pts, m = 0.75):
 
@@ -311,7 +312,31 @@ def yaw_angle_rads_alternative(X_pts, Y_pts):
 
     return yaw_rad_in_arccos_domain    
 
+def get_xyz(binary_img, intrinsics, A_real, x_pts, y_pts, areas):
 
+    # Vector of distances from center
+    dx_pts = x_pts - binary_img.shape[1]/2
+    dy_pts = y_pts - binary_img.shape[0]/2
+    distance_vector = np.sqrt(np.power(dx_pts, 2) + np.power(dy_pts, 2))
+    
+    # Position of minimum distance 
+    pos = np.argmin(distance_vector)
+    
+    # Focal length mean: f_mean = (f_x + f_y)/2
+    f = (intrinsics[0][0] + intrinsics[1][1])/2
+
+    # Nearest line area
+    A_contour = areas[pos]
+
+    # Projection coeficcient
+    proj_coef = np.sqrt(A_real/A_contour)
+
+    # Z heigth calculation
+    z = f * proj_coef
+    x = dx_pts[pos] * proj_coef
+    y = -dy_pts[pos] * proj_coef
+
+    return x_pts[pos], y_pts[pos], x, y, z
 
 def draw_circles(image ,x_pts, y_pts, circ_color = (0,0,255)):
     
