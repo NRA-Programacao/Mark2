@@ -4,8 +4,11 @@
 double t; //intervalo de tempo do filtro de Kalman
 int alfa = 1e-3, ki = 0, beta = 2;
 
-double X_m0[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-1
-double X_m1[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k
+double X_m0[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k
+double X_m1[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-1
+double X_m2[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-2
+double X_m3[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-3
+double X_m4[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-4
 double a[3][1] = {{ax}, {ay}, {az}};  //acelerômetro
 double g[3][1] = {{gx}, {gy}, {gz}};  //giroscópio
 double m[3][1] = {{mx}, {my}, {mz},}; //magnetômetro
@@ -21,14 +24,73 @@ double B[12][6] = {{t*t/2 0 0 0 0 0}, {0 t*t/2 0 0 0 0}, {0 0 t*t/2 0 0 0}, {0 0
 
 double P[12][12] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}; //matriz de covariância
 
+double media(double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
+{
+            return (_0[i][1] + _1[i][1] + _2[i][1] + _3[i][1] + _4[i][1])/5.0;
+}
+
+double covariancia(double media[12][1], double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
+{
+            int i, j, k;
+            double media_m[12][5];
+            double sum;
+            double covar [12][12];
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][0] = media[i][1] - _0[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][1] = media[i][1] - _1[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][2] = media[i][1] - _2[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][3] = media[i][1] - _3[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][4] = media[i][1] - _4[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        for (j=i, j<12, j++)
+                        {
+                                    for (k=0, k<5, k++)
+                                    {
+                                                sum = sum + media_m[i][k]*media_m[j][k];
+                                    }
+                                    covar[i][j] =  sum/4.0;
+                                    covar[j][i] = covar[i][j];
+                        }
+                        
+            }
+       
+            return covar;
+}
+
+
 
 int main ()
 {
- X = X*A + B*u;
- a = R*(a-gr);
- X_m1 = X_m0 + M*a + N*g;
- 
-  
+            X = X*A + B*u;
+            a = R*(a-gr);
+            X_m1 = X_m0 + M*a + N*g;
+
 }
 /*
 roll_quad  = math.atan(2*(q2*q3 + q0*q1), q0^2 - q1^2 - q2^2 - q3^2) -- Roll
