@@ -11,7 +11,7 @@ gazebo_video = "./tentativa4-2021-03-16_14.29.webm"
 cap = cv.VideoCapture(gazebo_video)
 
 # Assuming a line that has 2x20 cm
-A_known = 0.02*0.2
+A_known = 0.02*0.08
 
 # Intrinsics
 intrinsics = np.array([[277, 0, 160],
