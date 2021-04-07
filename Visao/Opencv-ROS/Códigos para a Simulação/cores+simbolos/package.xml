@@ -2,7 +2,6 @@
 <package format="2">
   <name>ros_essentials_cpp</name>
   <version>0.0.0</version>
- 
 
 
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
@@ -51,13 +50,7 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
 
-  
-  
-
 
   <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    
-
-  </export>
+  <export></export>
 </package>
