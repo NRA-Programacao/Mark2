@@ -5,6 +5,7 @@
 Clonar o git do Hector Quadrotor e mudar o branch para Noetic (ou Kinetic com a sua versão do gazebo)
 
 		git clone https://bitbucket.org/theconstructcore/hector_quadrotor_sim.git
+		cd hector_quadrotor_sim
 		git switch noetic
 		
 Seguir o tutorial abaixo para instalar o pacote para controlar o drone pelo teclado
