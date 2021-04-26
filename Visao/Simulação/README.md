@@ -1,6 +1,6 @@
 # Tutorial de Configuração do Workspace de ROS 
 
-Primeiramente, tendo ROS instalado pelo tutorial da ROS Wiki ([Link](http://wiki.ros.org/ROS/Installation)) deve-se criar uma área de trabalho (workspace) para armazenar e copilar os projetos de ROS de maneira mais prática. Para isso num terminal qualquer temos:
+Primeiramente, tendo ROS instalado pelo tutorial da ROS Wiki ([Link](http://wiki.ros.org/ROS/Installation)) deve-se criar uma área de trabalho (workspace) para armazenar e compilar os projetos de ROS de maneira mais prática. Para isso num terminal qualquer temos:
 
 📌 OBS.: Tutorial abaixo baseado na ROS Wiki ([Link](wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment)), em um vídeo do Youtube ([Link](https://www.youtube.com/watch?v=iLiI_IRedhI&list=PLuteWQUGtU9BD_vxTEZy8tP8FF4zE2VJH&index=7)) e no pdf da Universidade ETH Zürich ([Link](https://ethz.ch/content/dam/ethz/special-interest/mavt/robotics-n-intelligent-systems/rsl-dam/ROS2021/lec1/ROS%20Course%20Slides%20Course%201.pdf))
 
@@ -14,19 +14,19 @@ user@pc: ~/catkin_ws/$ catkin_make
 
 O comando _catkin_make_ será sempre usado para compilar os pacotes de ROS criados
 
-⚠️ O comando deve ser usado **SEMPRE** no diretório raíz do ser workspace, no caso, no ``/catkin_ws``, para compilação dos pacotes
+### ⚠️ O comando deve ser usado **SEMPRE** no diretório raíz do ser workspace, no caso, no ``/catkin_ws/``, para compilação dos pacotes
 
 Nesse instante dentro do diretório ``/catkin_ws`` temos 2 novos diretórios criados ``/catkin_ws/build/``,``/catkin_ws/devel/`` e o anterior ``/catkin_ws/src/``, sempre que criar ou modificar um pacote ele **DEVE** estar localizado no diretório ``/catkin_ws/src/``, os outros dois armazenam executáveis e aquivos de configuração de ROS
 
 ![grafik](https://user-images.githubusercontent.com/70553958/116134484-51ace780-a6a6-11eb-8485-f69ebed28a7f.png)
 
-Em tese, toda a instalação e configuração do ambiente está completa, mas deve-se realçar que no momento **SEMPRE** que abrir um terminal novo, para que o ROS entenda esse workspace criado como de fato um workspace de ROS devemos usar o seguinte comando:
+Em tese, toda a instalação e configuração do ambiente está completa, mas deve-se realçar que no momento **SEMPRE** que abrir um terminal novo, para que o ROS entenda esse workspace criado como de fato um workspace de ROS devemos usar o seguinte comando no seu ``/catkin_ws/``:
 
 ```console
 user@pc: ~/catkin_ws/$ source devel/setup.bash
 ```
 
-Porém há uma adaptação que facilita e sempre reconhece esse workspace criado como o workspace principal de ROS
+Porém há uma adaptação que facilita e sempre reconhece esse workspace criado como o workspace principal de ROS. Para isso devemos editar o arquivo _bashrc_
 
 📌 Os comandos abaixo são opcionais, caso você queira ter mais de um workspace de ROS o melhor é utilizar o comando _source devel/setup.bash_ para cada situação
 
@@ -35,20 +35,20 @@ user@pc: ~/catkin_ws/$ cd ..
 user@pc: ~$ gedit .bashrc
 ```
 
-Após o comando deve-se descer até o **final** do arquivo _bashrc_ e escrever os seguintes comandos para o caso de ter instalado ROS Noetic:
+Após o comando deve-se descer até o **final** do arquivo _bashrc_ e escrever os seguintes comandos no arquivo, para o caso de ter instalado ROS Noetic:
 
 	source /opt/ros/noetic/setup.bash
 	
 	source /home/YOUR_USER_NAME/catkin_ws/devel/setup.bash
 
-⚠️ Para outras distros de ROS que não a Noetic é só substituir o noetic no primeiro comando por sua distro (O comando genérico seria: ``source /opt/ros/<DISTRO>/setup.bash``)
+### ⚠️ Para outras distros de ROS que não a Noetic é só substituir o noetic no primeiro comando por sua distro (O comando genérico seria: ``source /opt/ros/<DISTRO>/setup.bash``)
 
-⚠️ O YOUR_USER_NAME que é o nome que aparece antes do @ em qualquer comando em um terminal, no caso do tutorial seria _user_
+### ⚠️ O YOUR_USER_NAME nada mais é que o nome que aparece antes do @ em qualquer comando em um terminal, no caso do tutorial seria _user_
 
 Assim, só resta salvar o arquivo _bashrc_ editado e abrir um novo terminal. Para testar se está tudo certo utilize o comando abaixo:
 
 ```console
-user@pc: ~$ echo $ROS_PACKAGE_PATH
+user@pc: ~$ echo $ROS_PACKAGE_PATH 
 ```
 E a resposta deve ser do tipo:
 
@@ -57,7 +57,7 @@ E a resposta deve ser do tipo:
 
 Agora pode-se criar e editar pacotes de ROS. 
 
-Sendo que assim, siga os passos a seguir para instalar o simulador Hector Quadrotor e depois vá para [esse link](https://github.com/NRA-Programacao/Mark2_ros) clonar o repositório com os pacotes de ROS utilizados no Mark II 
+Sendo assim, siga os passos a seguir para instalar o simulador Hector Quadrotor e depois vá para [esse link](https://github.com/NRA-Programacao/Mark2_ros) clonar o repositório com os pacotes de ROS utilizados no Mark II 
 
 # Simulação com Hector Quadrotor para ROS-Noetic ou ROS-Kinetic
 
@@ -80,7 +80,7 @@ Recomenda-se seguir o tutorial para instalar o pacote para controlar o drone pel
 
 Copiar os arquivos presentes nesse diretório do Git do Mark II pelos originais do Hector para isso:     
 
-⚠️ Considerando que você clonou este diretórtio do Mark2 na área de trabalho então é só seguir os comandos abaixo, caso esteja em algum diretório é só acresentar o Path até o diretório em cada comando
+### ⚠️ Considerando que você clonou este diretórtio do Mark2 na área de trabalho então é só seguir os comandos abaixo, caso esteja em algum diretório é só acresentar o Path até o diretório em cada comando
 
 ### Arquivo put_robot in world
 
@@ -138,3 +138,4 @@ Se tiver dado tudo certo o drone do Hector estará em um ambiente vazio do Gazeb
 
 Agora, como indicado, pode-se clonar o repositório com os pacotes de ROS utilizados no Mark II [nesse link](https://github.com/NRA-Programacao/Mark2_ros) 
 
+### ⚠️ **Para qualquer erro durante o processo, procure o erro que apareceu no terminal no google que, provavelmente, com alguns comandos resolve-se o problema (falta de alguma biblioteca instalada por exemplo)**
