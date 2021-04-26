@@ -1,6 +1,6 @@
 # Tutorial de Configuração do Workspace de ROS 
 
-Primeiramente, tendo ROS instalado pelo tutorial da ROS Wiki ([Link](http://wiki.ros.org/ROS/Installation)) deve-se criar uma área de trabalho para armazenar e copilar os projetos de ROS de maneira mais prática. Para isso num terminal qualquer temos:
+Primeiramente, tendo ROS instalado pelo tutorial da ROS Wiki ([Link](http://wiki.ros.org/ROS/Installation)) deve-se criar uma área de trabalho (workspace) para armazenar e copilar os projetos de ROS de maneira mais prática. Para isso num terminal qualquer temos:
 
 📌 OBS.: Tutorial abaixo baseado na ROS Wiki ([Link](wiki.ros.org/ROS/Tutorials/InstallingandConfiguringROSEnvironment)), em um vídeo do Youtube ([Link](https://www.youtube.com/watch?v=iLiI_IRedhI&list=PLuteWQUGtU9BD_vxTEZy8tP8FF4zE2VJH&index=7)) e no pdf da Universidade ETH Zürich ([Link](https://ethz.ch/content/dam/ethz/special-interest/mavt/robotics-n-intelligent-systems/rsl-dam/ROS2021/lec1/ROS%20Course%20Slides%20Course%201.pdf))
 
