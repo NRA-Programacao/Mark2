@@ -10,13 +10,22 @@ int beta = 2, n = 12, i, j;
 double mu[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor média de cada estado
 double mu_0[12][1] ={{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor média de cada estado no passo anterior
 
-double X_m0[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k
-double X_m1[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-1
-double X_m2[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-2
-double X_m3[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-3
-double X_m4[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //estados medidos k-4
+double X_m0[12][25]; //matriz auxiliar, armazena f[coluna]-mu
+double X_m1[25][12]; //matriz auxiliar de covariância (prediction step)
+double cov[12][1]; //vetor de covariância do prediction step (colunas de X_m1 somadas)
+double X_m3[12][25]; //matriz auxiliar, armazena M*a
+double obs[12][25]; //matriz auxiliar, armazena M*a+N*g
+double z[12][1]; //soma ponderada das colunas de obs por seus respectivos pesos
+double X_m6[12][25]; //matriz auxiliar, armazena obs[coluna]-z
+double X_m7[12][25]; //matrix auxiliar, armazena peso*(obs[coluna]-z)(transposta(obs[coluna]-z)
+double S_t[12][1]; //soma das colunas de X_m7
+double X_m9[12][25]; //matriz auxiliar, armazena (sigma-mu)
+double X_m10[12][25]; //matriz auxiliar, armazena (obs-z)
+double X_m11[12][25]; //matriz auxiliar, armazena (sigma-mu)*transposta(obs-z)
+double cov_cruz[12][1]; //vetor covariância cruzada, update step, soma das colunas de X_m11
+double a[3][0]; //acelerações medidas (R*(ac-gr))
 
-double a[3][1] = {{ax}, {ay}, {az}};  //acelerômetro
+double ac[3][1] = {{ax}, {ay}, {az}};  //acelerômetro
 double g[3][1] = {{gx}, {gy}, {gz}};  //giroscópio
 double m[3][1] = {{mx}, {my}, {mz},}; //magnetômetro
 
@@ -117,6 +126,12 @@ double sigma[25][12]; //matriz pontos Sigma
 double weight_m[25][1]; //vetor de pesos dos pontos sigma para média
 double weight_c[25][1]; //vetor de pesos de pontos sigma para covariância
 
+//VARIÁVEIS FALTANTES
+double g[12][0]; //vetor armazena B*u
+double f[12][25]; //matriz armazena A*sigma, cada coluna é um vetor de estados
+
+
+
 /*calcula a média de 5 vetores de estado (objetivo é usar os últimos 5)
 double media(double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
 {
@@ -178,6 +193,7 @@ double covariancia(double media[12][1], double _0[12][1], double _1[12][1], doub
             return covar;
 }
 */
+
 void Cholesky_Decomposition(double matrix[12][12])
 {
     // Decomposing a matrix into Lower Triangular
@@ -227,7 +243,6 @@ void sigma_points (void)
             }
             
             //Pesos dos pontos sigma
-            
             weight_m[0][0] = lambda/(n+lambda);
             weight_c[0][0] = weight_m[0][0] + (1 + alfa*alfa + beta);  
             
@@ -240,8 +255,26 @@ void sigma_points (void)
 
 int main ()
 {
-           // X = X*A + B*u;
-            a = R*(a-gr);
+  //ac = (ac-gr)
+  for (i=0, i<3, i++)
+  {
+    ac[i][0] = ac[i][0]-gr[i][0];
+  }
+  //ac = R*ac
+  for (i=0, i<3, i++)
+  {
+    sum=0;
+    for (j=0, j<3, j++)
+    {
+      sum = sum + R[i][j]*ac[j][0];
+    }
+    a[i][0] = sum;
+  }
+  
+  //determinação dos pontos sigma
+  sigma_points();
+       
+            
           
             
             
@@ -261,7 +294,7 @@ for (i=0, i<12, i++)
             {
                         sum = sum + B[i][j]*u[j][0];
             }
-            g[i][0] = sum; //vetor g ainda não foi declarado
+            g[i][0] = sum;
  }
             
 //A*sigma[coluna]
@@ -274,7 +307,7 @@ for (i=0, i<25, i++)
                         {
                                     sum = sum + A[k][j]*sigma[k][i];
                         }
-                        f[j][i] = sum; //a matriz f ainda não foi declarada
+                        f[j][i] = sum;
              }
  }
  
@@ -292,7 +325,7 @@ for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        X_m0[j][i] = f[j][i] - mu[j][0]; //X_m0 é apenas matriz auxiliar [12][25], a declaração está errada
+                        X_m0[j][i] = f[j][i] - mu[j][0]; //X_m0 é apenas matriz auxiliar [12][25]
             }
             for (j=0, j<12, j++)
             {
@@ -301,7 +334,8 @@ for (i=0, i<25, i++)
                         {
                                    sum = sum + X_m0[j][i]*X_m0[i][k];
                         }
-                        X_m1[i][j] = weight_c[i][0]*sum; //X_m1 é apenas matriz auxiliar [12][12], a declaração está errada          
+                        X_m1[i][j] = weight_c[i][0]*sum; //X_m1 é matriz de covariância [25][12]       
+             }
 }
 
 //soma das colunas X_m1
@@ -309,7 +343,7 @@ for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        X_m2[j][0] = X_m2[j][0] + X_m1[j][i]; //X_m1 vetor de covariância [12][1], a declaração está errada, ainda é necessário implementar a soma com Q
+                        cov[j][0] = cov[j][0] + X_m1[j][i]; //cov[12][1] vetor de covariância [12][1], ainda é necessário implementar a soma com Q
             }
 }
 
@@ -319,7 +353,7 @@ for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        mu = mu + weight_m[i][0]*estado[j][i];
+                        mu = mu + weight_m[i][0]*X[j][i];
             }
             
  }
@@ -336,7 +370,7 @@ for (i=0, i<25, i++)
                         {
                                     sum = sum + M[j][k]*a[k][0];
                         }
-                        X_m3[j][i] = sum; //X_m3 é apenas matriz auxiliar [12][25], a declaração está errada
+                        X_m3[j][i] = sum; //X_m3 é apenas matriz auxiliar [12][25]
             }
             
  }
@@ -351,26 +385,26 @@ for (i=0, i<25, i++)
                         {
                                     sum = sum + N[j][k]*g[k][0];
                         }
-                        X_m4[j][i] = X_m3 + sum; //X_m4 é apenas matriz auxiliar [12][25], a declaração está errada
+                        obs[j][i] = X_m3 + sum; //obs é matriz de observação [12][25]
             }
             
  }
  
- //cálculo da soma das colunas de X_m4, multiplicadas por seus respectivos pesos
+ //cálculo da soma das colunas de obs, multiplicadas por seus respectivos pesos
  for (i=0, i<12, i++)
  {
             for (j=0, j<25, j++)
             {
-                        X_m5[i][0] = X_m4[i][j]*weight_m[j][0]; //X_m5 é vetor auxiliar [12][1], a declaração está errada
+                        z[i][0] = obs[i][j]*weight_m[j][0]; //z é vetor auxiliar [12][1], a declaração está errada
             }
  }
  
- //peso*(X_m4[coluna]-X_m5)(transposta(X_m4[coluna]-X_m5)
+ //peso*(obs[coluna]-z)(transposta(obs[coluna]-z)
 for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        X_m6[j][i] = X_m4[j][i] - X_m5[j][0]; //X_m6 é apenas matriz auxiliar [12][25], ainda não declarado
+                        X_m6[j][i] = obs[j][i] - z[j][0]; //X_m6 é apenas matriz auxiliar [12][25]
             }
             for (j=0, j<12, j++)
             {
@@ -379,7 +413,7 @@ for (i=0, i<25, i++)
                         {
                                    sum = sum + X_m6[j][i]*X_m6[i][k];
                         }
-                        X_m7[i][j] = weight_c[i][0]*sum; //X_m7 é apenas matriz auxiliar [12][12], ainda não declarado         
+                        X_m7[i][j] = weight_c[i][0]*sum; //X_m7 é apenas matriz auxiliar [12][25]         
 }
 
 //soma das colunas X_m7
@@ -387,33 +421,18 @@ for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        X_m8[j][0] = X_m8[j][0] + X_m7[j][i]; //X_m8 vetor S_t [12][1], ainda não declarado, ainda é necessário implementar a soma com R_t
+                        S_t[j][0] = S_t[j][0] + X_m7[j][i]; //S_t vetor [12][1], ainda é necessário implementar a soma com R_t
             }
 }
 
-//matriz de correlação cruzada
-//sigma-mu e Z-mu
+
+//(sigma-mu)*transposta(obs-z)
 for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        X_m9[j][0] = sigma[j][i] - mu[j][0];  //X_m9 e X_m10 são vetores auxiliares [12][1] ainda não declarados
-                        X_m10[j][0] = X_m4[j][i] - X_m8[j][0];
-            }
-} 
-
-//(sigma-mu)*transposta(Z-mu)
-
-
-
-
-
-for (i=0, i<25, i++)
-{
-            for (j=0, j<12, j++)
-            {
-                        X_m9[j][0] = sigma[j][i] - mu[j][0];  //X_m9 e X_m10 são vetores auxiliares [12][1] ainda não declarados
-                        X_m10[j][0] = X_m4[j][i] - X_m8[j][0];
+                        X_m9[j][i] = sigma[j][i] - mu[j][0];  //X_m9 e X_m10 são matrizes auxiliares [12][25]
+                        X_m10[j][i] = obs[j][i] - z[j][0];
             }
             for (j=0, j<12, j++)
             {
@@ -422,7 +441,7 @@ for (i=0, i<25, i++)
                         {
                                    sum = sum + X_m9[j][i]*X_m10[i][k];
                         }
-                        X_m11[i][j] = weight_c[i][0]*sum; //X_m11 é apenas matriz auxiliar [12][12], a declaração está errada          
+                        X_m11[i][j] = weight_c[i][0]*sum; //X_m11 é apenas matriz auxiliar [12][25]        
 }
 
 //soma das colunas X_m11
@@ -430,7 +449,7 @@ for (i=0, i<25, i++)
 {
             for (j=0, j<12, j++)
             {
-                        X_m12[j][0] = X_m12[j][0] + X_m11[j][i]; //X_m12 vetor SIGMA_BARRA_txz [12][1], ainda não declarado
+                        cov_cruz[j][0] = cov_cruz[j][0] + X_m11[j][i]; //vetor cov_cruz [12][1]
             }
 }
 
