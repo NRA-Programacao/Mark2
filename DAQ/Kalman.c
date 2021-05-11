@@ -131,68 +131,6 @@ double f[12][25]; //matriz armazena A*sigma, cada coluna é um vetor de estados
 
 
 
-/*calcula a média de 5 vetores de estado (objetivo é usar os últimos 5)
-double media(double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
-{
-            return (_0[i][1] + _1[i][1] + _2[i][1] + _3[i][1] + _4[i][1])/5.0;
-}
-
-//calcula a covariancia entre 5 vetores de estado (objetivo é usar os últimos 5)
-double covariancia(double media[12][1], double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
-{
-            int i, j, k;
-            double media_m[12][5];
-            double sum;
-            double covar [12][12];
-            
-            for (i=0, i<12, i++)
-            {
-                        media_m[i][0] = media[i][1] - _0[i][1];
-                        
-            }
-            
-            for (i=0, i<12, i++)
-            {
-                        media_m[i][1] = media[i][1] - _1[i][1];
-                        
-            }
-            
-            for (i=0, i<12, i++)
-            {
-                        media_m[i][2] = media[i][1] - _2[i][1];
-                        
-            }
-            
-            for (i=0, i<12, i++)
-            {
-                        media_m[i][3] = media[i][1] - _3[i][1];
-                        
-            }
-            
-            for (i=0, i<12, i++)
-            {
-                        media_m[i][4] = media[i][1] - _4[i][1];
-                        
-            }
-            
-            for (i=0, i<12, i++)
-            {
-                        for (j=i, j<12, j++)
-                        {
-                                    for (k=0, k<5, k++)
-                                    {
-                                                sum = sum + media_m[i][k]*media_m[j][k];
-                                    }
-                                    covar[i][j] =  sum/4.0;
-                                    covar[j][i] = covar[i][j];
-                        }
-                        
-            }
-       
-            return covar;
-}
-*/
-
 void Cholesky_Decomposition(double matrix[12][12])
 {
     // Decomposing a matrix into Lower Triangular
@@ -442,6 +380,70 @@ int main ()
     }
   }  
 }
+
+
+
+/*calcula a média de 5 vetores de estado (objetivo é usar os últimos 5)
+double media(double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
+{
+            return (_0[i][1] + _1[i][1] + _2[i][1] + _3[i][1] + _4[i][1])/5.0;
+}
+
+//calcula a covariancia entre 5 vetores de estado (objetivo é usar os últimos 5)
+double covariancia(double media[12][1], double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
+{
+            int i, j, k;
+            double media_m[12][5];
+            double sum;
+            double covar [12][12];
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][0] = media[i][1] - _0[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][1] = media[i][1] - _1[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][2] = media[i][1] - _2[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][3] = media[i][1] - _3[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        media_m[i][4] = media[i][1] - _4[i][1];
+                        
+            }
+            
+            for (i=0, i<12, i++)
+            {
+                        for (j=i, j<12, j++)
+                        {
+                                    for (k=0, k<5, k++)
+                                    {
+                                                sum = sum + media_m[i][k]*media_m[j][k];
+                                    }
+                                    covar[i][j] =  sum/4.0;
+                                    covar[j][i] = covar[i][j];
+                        }
+                        
+            }
+       
+            return covar;
+}
+*/
 
 /*
 roll_quad  = math.atan(2*(q2*q3 + q0*q1), q0^2 - q1^2 - q2^2 - q3^2) -- Roll
