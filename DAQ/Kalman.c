@@ -1,3 +1,14 @@
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+//COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
+
 #include <stdio.h>
 #include <math.h>
 #include <bits/stdc++.h>
@@ -7,15 +18,17 @@ using namespace std;
 //pontos sigma
 double t; //intervalo de tempo do filtro de Kalman
 double alfa = 1e-3, ki = 0, lambda = 0;
-int beta = 2, n = 12, i, j;
+int beta = 2, n = 12, i, j, j1, k;
 double mu[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor média de cada estado
 double mu_0[12][1] ={{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor média de cada estado no passo anterior
 
 double X_m0[12][25]; //matriz auxiliar, armazena f[coluna]-mu
 double X_m1[25][12]; //matriz auxiliar de covariância (prediction step)
 double cov[12][1]; //vetor de covariância do prediction step (colunas de X_m1 somadas)
-double X_m3[12][25]; //matriz auxiliar, armazena M*a
-double obs[12][25]; //matriz auxiliar, armazena M*a+N*g
+double X_m3[12][25]; //matriz auxiliar, armazena M*a (para sigma points)
+double obs_sigma[12][25]; //matriz de observação, armazena M*a+N*g (para sigma points) e depois a observação
+double X_m4[12][1]; //vetor auxiliar, armazena M*a (para último estado)
+double obs[12][1]; //vetor de observação, armazena M*a+N*g (para último estado) e depois a observação
 double z[12][1]; //soma ponderada das colunas de obs por seus respectivos pesos
 double X_m6[12][25]; //matriz auxiliar, armazena obs[coluna]-z
 double X_m7[12][25]; //matrix auxiliar, armazena peso*(obs[coluna]-z)(transposta(obs[coluna]-z)
@@ -24,6 +37,12 @@ double X_m9[12][25]; //matriz auxiliar, armazena (sigma-mu)
 double X_m10[12][25]; //matriz auxiliar, armazena (obs-z)
 double X_m11[12][25]; //matriz auxiliar, armazena (sigma-mu)*transposta(obs-z)
 double cov_cruz[12][1]; //vetor covariância cruzada, update step, soma das colunas de X_m11
+double X_m12[12][1]; //vetor auxiliar, armazena obs-z
+double X_m13[12][1]; //vetor auxiliar, armazena K_t*X_m12
+double mu_f[12][1]; //vetor de média ao final do ciclo de Kalman
+double X_m14[12][12]; //matriz auxiliar, armazena K_t*S_t*K_t_transposta
+double X_m15{12][1] = {{X_m14[0][0]}, {X_m14[1][1}, {X_m14[2][2]}, {X_m14[3][3]}, {X_m14[4][4]}, {X_m14[5][5]}, {X_m14[6][6]}, {X_m14[7][7]}, {X_m14[8][8]}, {X_m14[9][9]}, {X_m14[10][10]}, {X_m14[11][11]}}; //vetor auxiliar, armazena 
+
 double a[3][0]; //acelerações medidas (R*(ac-gr))
 
 double ac[3][1] = {{ax}, {ay}, {az}};  //acelerômetro
@@ -92,43 +111,57 @@ double B[12][6] = {{t*t/2 0 0 0 0 0}, //matriz de controle
                    {0 0 0 0 t 0}, 
                    {0 0 0 0 0 t}};
 
-double P[12][12] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //matriz de covariância
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}; 
-
-double P_[12][12]= {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, //matriz "covariância" para pontos sigma
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
-                    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}; 
-
 double lower[12][12]; //para decomposição de Cholesky
 
-double sigma[25][12]; //matriz pontos Sigma
+double sigma[12][25]; //matriz pontos Sigma
 
 double weight_m[25][1]; //vetor de pesos dos pontos sigma para média
 double weight_c[25][1]; //vetor de pesos de pontos sigma para covariância
 
-//VARIÁVEIS FALTANTES
 double g[12][0]; //vetor armazena B*u
 double f[12][25]; //matriz armazena A*sigma, cada coluna é um vetor de estados
 
+double S_t_diag[12][12] = {{S_t[0][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, S_t[1][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, S_t[2][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, S_t[3][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, S_t[4][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, S_t[5][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S_t[6][0], 0.0, 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S_t[7][0], 0.0, 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S_t[8][0], 0.0, 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S_t[9][0], 0.0, 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S_t[10][0], 0.0},
+                           {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, S_t[11][0]}};
+
+double S_t_diag_inverse[12][12] = {{1.0/S_t[0][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 1.0/S_t[1][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 1.0/S_t[2][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 1.0/S_t[3][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 1.0/S_t[4][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[5][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[6][0], 0.0, 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[7][0], 0.0, 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[8][0], 0.0, 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[9][0], 0.0, 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[10][0], 0.0},
+                                  {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0/S_t[11][0]}};
+
+double cov_cruz_diag[12][12] = {{cov_cruz[0][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, cov_cruz[1][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, cov_cruz[2][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, cov_cruz[3][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, cov_cruz[4][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[5][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[6][0], 0.0, 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[7][0], 0.0, 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[8][0], 0.0, 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[9][0], 0.0, 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[10][0], 0.0},
+                                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[11][0]}};
+
+double K_t[12][12];
+double K_t_transp[12][12];
 
 
 void Cholesky_Decomposition(double matrix[12][12])
@@ -164,7 +197,7 @@ void sigma_points (void)
             P_ = (n+lamba)*P;
             Cholesky_Decomposition(P_);
             
-            mu_0 = mu; //atribuição para não perder as médias do passo anterior
+            mu_0 = mu_f; //atribuição para não perder as médias do passo anterior
             for (i=0, i<12, i++) //a primeira coluna da matriz sigma é a coluna de médias anteriores
             {
                         sigma[i][0] = mu_0;
@@ -255,7 +288,7 @@ int main ()
     {
       X_m0[j][i] = f[j][i] - mu[j][0]; //X_m0 é apenas matriz auxiliar [12][25]
     }
-    for (j=0, j<12, j++)
+    for (j1=0, j1<12, j1++)
     {
       sum = 0;
       for (k=0, k<12, k++)
@@ -286,7 +319,7 @@ int main ()
   }
   
   //UPDATE STEP
-  //Modelo de observação
+  //Modelo de observação com pontos sigma
   //M*a
   for (i=0, i<25, i++)
   {
@@ -311,7 +344,54 @@ int main ()
       {
         sum = sum + N[j][k]*g[k][0];
       }
-      obs[j][i] = X_m3 + sum; //obs é matriz de observação [12][25]
+      obs_sigma[j][i] = X_m3 + sum; //obs é matriz de observação [12][25]
+    }
+  }
+  
+  //observação de sigma
+  for (i=0, i<12, i++)
+  {
+    for (j=0, j<25, j++)
+    {
+      obs_sigma[i][j] = obs_sigma[i][j] + sigma[i][j];
+    }
+  }
+  
+  //Modelo de observação com últimos estados
+  //M*a
+  for (i=0, i<12, i++)
+  {
+    for (j=0, j<1, j++)
+    {
+      sum = 0;
+      for (k=0, k<3, k++)
+      {
+        sum = sum + M[j][k]*a[k][j];
+      }
+      X_m4[i][j] = sum; //X_m3 é apenas matriz auxiliar [12][1]
+    }
+  }
+  
+  //N*g
+  for (i=0, i<12, i++)
+  {
+    for (j=0, j<1, j++)
+    {
+      sum = 0;
+      for (k=0, k<3, k++)
+      {
+        sum = sum + N[j][k]*g[k][j];
+      }
+      obs[i][j] = X_m4 + sum; //obs é vetor de observação [12][1]
+    }
+  }
+  
+  //observação dos últimos estados
+  for (i=0, i<12, i++)
+  {
+    for (j=0, j<12, j++)
+    {
+      obs[i][j] = obs[i][j] + X[i][j];
     }
   }
   
@@ -331,7 +411,7 @@ int main ()
     {
       X_m6[j][i] = obs[j][i] - z[j][0]; //X_m6 é apenas matriz auxiliar [12][25]
     }
-    for (j=0, j<12, j++)
+    for (j1=0, j1<12, j1++)
     {
       sum = 0;
       for (k=0, k<12, k++)
@@ -378,7 +458,84 @@ int main ()
     {
       cov_cruz[j][0] = cov_cruz[j][0] + X_m11[j][i]; //vetor cov_cruz [12][1]
     }
-  }  
+  }
+  
+  //ganho de Kalman
+  for (i=0, i<12, i++)
+  {
+    for (j=0, j<12, j++)
+    {
+      for (k=0, k<12, k++)
+      {
+        K_t[i][j] = K_t[i][j] + cov_cruz_diag[i][k]*S_t_diag_inverse[k][j];
+      }
+    }
+  }
+  
+  //subtração entre vetor observação com últimos estados e vetor z
+  for (i=0, i<12, i++)
+  {
+    for (j=0, j<1, j++)
+    {
+      X_m12[i][j] = obs[i][j] - z[i][j];
+    }
+  }
+  
+  //multiplicação K_t*X_m12
+  for (i=0; i<12; i++)
+  {
+    for (j=0; j<1; j++)
+    {
+      for (k=0; k<12; k++)
+      {
+        X_m13[i][j] = X_m13[i][j] + K_t[i][k]*X_m12[k][j]; //X_m13 é vetor auxiliar [12][3]
+      }
+    }
+  }
+  
+  //soma X_m13 + mu, resultando na média final
+  for (i=0; i<12; i++)
+  {
+    for (j=0; j<1; j++)
+    {
+      mu_f[i][j] = X_m13[i][j] + mu[i][j]; //mu_f é a média ao final do ciclo do Filtro de Kalman Unscented
+      X[i][j] = mu_f[i][j];
+    }
+  }
+  
+  //K_t*S_t*K_t_transposta (K_t_transposta = K_t, pois são diagonais)
+  //S_t*K_t_transposta
+  for (i=0; i<12; i++)
+  {
+    for (j=0; j<12; j++)
+    {
+      for (k=0; k<12; k++)
+      {
+        x_m14[i][j] = X_m14[i][j] + S_t[i][k]*K_t[k][j];
+      }
+    }
+  }
+  
+  //K_t*S_t
+  for (i=0; i<12; i++)
+  {
+    for (j=0; j<12; j++)
+    {
+      for (k=0; k<12; k++)
+      {
+        x_m14[i][j] = X_m14[i][j] + K_t[i][k]*S_t[k][j];
+      }
+    }
+  }
+  
+  //covariância final
+  for (i=0; i<12; i++)
+  {
+    for (j=0; j<1; j++)
+    {
+      cov_f[i][j] = cov[i][j] - X_m15[i][j];
+    }
+  }
 }
 
 
