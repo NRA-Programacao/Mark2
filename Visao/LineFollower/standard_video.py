@@ -63,6 +63,7 @@ while True:
 
         # Draw ROI and orientation line
         hud_moments_img = ltools.display_HUD(blur)
+<<<<<<< HEAD
         direction_by_moments_img = ltools.display_line_of_orientation(
             hud_moments_img, yaw_moments, line_length=150, put_text=False)
 
@@ -71,6 +72,13 @@ while True:
                             x_pts_moments, y_pts_moments)
         cv.circle(direction_by_moments_img, (int(x_near), int(y_near)),
                   radius=7, color=(0, 255, 0), thickness=-1)
+=======
+        direction_by_moments_img = ltools.display_line_of_orientation(hud_moments_img, yaw_moments,x_to_compute_distance=x_near, line_length=150 ,put_text=False )
+        
+        # Draw points on image
+        ltools.draw_circles(direction_by_moments_img, x_pts_moments, y_pts_moments)
+        # cv.circle(direction_by_moments_img, (int(x_near), int(y_near)),  radius = 7, color = (0,255,0), thickness=-1)
+>>>>>>> 88600a321d39bb40da0ab847d83c24e28df6e752
 
         # Display infos on image
         fps_txt = "FPS: " + str(round(1/(time.time()-t), 0))

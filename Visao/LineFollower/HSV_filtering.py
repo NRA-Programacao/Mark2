@@ -103,7 +103,7 @@ while(True):
        
         print(str(time.time()-t) + ': Higher than limit: ' + str(filtered) + ' , All contours: ' + str(len(cnts_hsv)) + '\n')
 
-        
+    #apenas um teste    
     #GRAY THRESH
     if thresh_methodGRAY_flag:   
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)

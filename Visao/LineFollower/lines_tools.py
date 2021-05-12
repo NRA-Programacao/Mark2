@@ -402,15 +402,17 @@ def display_line_of_orientation(image, yaw_angle_rads, x_to_compute_distance = N
     sin = np.sin(yaw_angle_rads)
     cos = np.cos(yaw_angle_rads)
     
+    x1 = int(0.5*width)
     y1 = int(0.5*height)
-    if x_to_compute_distance is not None:
-        x1 = int(x_to_compute_distance - 0.5*width)
-    else:
-        x1 = int(0.5*width)
     
     y2 = y1 - np.int(line_length*sin)
     x2 = x1 + np.int(line_length*cos)
 
+    if x_to_compute_distance is not None:
+        pt1 = (int(x_to_compute_distance), y1 - 5)
+        pt2 = (int(x_to_compute_distance), y1 + 5)
+        cv.line(mask, pt1, pt2, (0,0,255), thickness= 1 )
+    
     cv.line(mask, pt1 = (x1,y1), pt2 = (x2, y2), color = (0,0,255),thickness = 2)
     
     line_on_img = cv.addWeighted(image, 1, mask, beta, 1)
