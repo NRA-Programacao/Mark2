@@ -12,7 +12,8 @@
 //#include <stdio.h>
 //#include <math.h>
 //#include <bits/stdc++.h>
-include <iostream>
+
+#include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <cmath>
@@ -39,6 +40,7 @@ double mu_0[12][1] = {{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0
 double X_m0[12][25]; //matriz auxiliar, armazena f[coluna]-mu
 double X_m1[25][12]; //matriz auxiliar de covariância (prediction step)
 double cov[12][1]; //vetor de covariância do prediction step (colunas de X_m1 somadas)
+double cov_f[12][1];
 double X_m3[12][25]; //matriz auxiliar, armazena M*a (para sigma points)
 double obs_sigma[12][25]; //matriz de observação, armazena M*a+N*g (para sigma points) e depois a observação
 double X_m4[12][1]; //vetor auxiliar, armazena M*a (para último estado)
@@ -174,9 +176,9 @@ double cov_cruz_diag[12][12] = {{cov_cruz[0][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
                                 {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[10][0], 0.0},
                                 {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[11][0]}};
 
-
 double K_t[12][12];
 double K_t_transp[12][12];
+
 
 
 void Cholesky_Decomposition(double matrix[12][12])
@@ -196,7 +198,7 @@ void Cholesky_Decomposition(double matrix[12][12])
             } 
             else 
             {
-                // Evaluating L(i, j) using L(j, j)
+                // Evaluating L(i; j) using L(j; j)
                 for (int k = 0; k < j; k++)
                     sum += (lower[i][k] * lower[j][k]);
                 lower[i][j] = (matrix[i][j] - sum) / lower[j][j];
@@ -207,23 +209,26 @@ void Cholesky_Decomposition(double matrix[12][12])
 
 //determinação dos pontos sigma
 void sigma_points (void)
-{
-            lambda = alfa*alfa*(n+ki)-n;
-            P_ = (n+lamba)*P;
-            Cholesky_Decomposition(P_);
+{           
+            //! PROBLEMAS COM O "P" E O "P_" QUE NÃO FORAM DECLARADOS ANTERIORMENTE
             
-            mu_0 = mu_f; //atribuição para não perder as médias do passo anterior
-            for (i=0, i<12, i++) //a primeira coluna da matriz sigma é a coluna de médias anteriores
+            lambda = alfa*alfa*(n + ki) - n;
+            P_ = (n + lambda)*P;
+            Cholesky_Decomposition(P_);
+            double sum;
+            //mu_0 = mu_f; //atribuição para não perder as médias do passo anterior
+            for (i=0; i<12; i++) //a primeira coluna da matriz sigma é a coluna de médias anteriores
             {
-                        sigma[i][0] = mu_0;
+                        mu_0[i][0] = mu_f[i][0];
+                        sigma[i][0] = mu_f[i][0];
             }
             
-            for (i=1, i<13, i++) //determinação dos pontos sigma restantes
+            for (i=1; i<13; i++) //determinação dos pontos sigma restantes
             {
-                        for (j=0, j<12, j++)
+                        for (j=0; j<12; j++)
                         {
-                                    sigma[j][i] = mu_0 + lower[j][i];
-                                    sigma[j][i+12] = mu_0 - lower[j][i];
+                                    sigma[j][i] = mu_0[i][0] + lower[j][i];
+                                    sigma[j][i+12] = mu_0[i][0] - lower[j][i];
                         }
             }
             
@@ -231,25 +236,26 @@ void sigma_points (void)
             weight_m[0][0] = lambda/(n+lambda);
             weight_c[0][0] = weight_m[0][0] + (1 + alfa*alfa + beta);  
             
-            for (i=1, i<25, i++)
+            for (i=1; i<25; i++)
             {
                         weight_m[i][0] = 1/2*(n+lambda);
                         weight_c[i][0] = weight_m[i][0];
             }
 }
 
-int main ()
-{
+int main (void){
+
+  double sum;
   //ac = (ac-gr)
-  for (i=0, i<3, i++)
+  for (i=0; i<3; i++)
   {
     ac[i][0] = ac[i][0]-gr[i][0];
   }
   //ac = R*ac
-  for (i=0, i<3, i++)
+  for (i = 0; i<3; i++)
   {
-    sum=0;
-    for (j=0, j<3, j++)
+    sum = 0;
+    for (j=0; j<3; j++)
     {
       sum = sum + R[i][j]*ac[j][0];
     }
@@ -260,12 +266,12 @@ int main ()
   sigma_points();
   
   //PREDICTION STEP
-  //f(sigma,u)
+  //f(sigma;u)
   //B*u
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
     sum=0;
-    for (j=0, j<6, j++)
+    for (j=0; j<6; j++)
     {
       sum = sum + B[i][j]*u[j][0];
     }
@@ -273,12 +279,12 @@ int main ()
   }
   
   //A*sigma[coluna]
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       sum = 0;
-      for (k=0, k<12, k++)
+      for (k=0; k<12; k++)
       {
         sum = sum + A[k][j]*sigma[k][i];
       }
@@ -287,9 +293,9 @@ int main ()
   }
   
   //f[coluna] + B*u
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j<0, j<12, j++)
+    for (j<0; j<12; j++)
     {
       f[j][i] = f[j][i] + g[i][0];
     }
@@ -297,16 +303,16 @@ int main ()
   
   //covariância
   //peso*(f[coluna]-mu)(transposta(f[coluna]-mu)
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       X_m0[j][i] = f[j][i] - mu[j][0]; //X_m0 é apenas matriz auxiliar [12][25]
     }
-    for (j1=0, j1<12, j1++)
+    for (j_1=0; j_1<12; j_1++)
     {
       sum = 0;
-      for (k=0, k<12, k++)
+      for (k=0; k<12; k++)
       {
         sum = sum + X_m0[j][i]*X_m0[i][k];
       }
@@ -315,33 +321,37 @@ int main ()
   }
   
   //soma das colunas X_m1
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
-      cov[j][0] = cov[j][0] + X_m1[j][i]; //cov[12][1] vetor de covariância [12][1], ainda é necessário implementar a soma com Q
+      cov[j][0] = cov[j][0] + X_m1[j][i]; //cov[12][1] vetor de covariância [12][1]; ainda é necessário implementar a soma com Q
     }
   }
   
   //cálculo média
-  mu_0 = mu;
-  for (i=0, i<25, i++)
+  //mu_0 = mu;
+  for (i = 0; i < 12; i++){
+    mu_0[i][0] = mu[i][0];
+  }
+  
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
-      mu = mu + weight_m[i][0]*X[j][i];
+      mu[j][0] = mu[j][0] + weight_m[i][0]*X[j][i];
     }
   }
   
   //UPDATE STEP
   //Modelo de observação com pontos sigma
   //M*a
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       sum = 0;
-      for (k=0, k<3, k++)
+      for (k=0; k<3; k++)
       {
         sum = sum + M[j][k]*a[k][0];
       }
@@ -350,23 +360,23 @@ int main ()
   }
   
   //N*g
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       sum = 0;
-      for (k=0, k<3, k++)
+      for (k=0; k<3; k++)
       {
         sum = sum + N[j][k]*g[k][0];
       }
-      obs_sigma[j][i] = X_m3 + sum; //obs é matriz de observação [12][25]
+      obs_sigma[j][i] = X_m3[j][i] + sum; //obs é matriz de observação [12][25]
     }
   }
   
   //observação de sigma
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<25, j++)
+    for (j=0; j<25; j++)
     {
       obs_sigma[i][j] = obs_sigma[i][j] + sigma[i][j];
     }
@@ -374,12 +384,12 @@ int main ()
   
   //Modelo de observação com últimos estados
   //M*a
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<1, j++)
+    for (j=0; j<1; j++)
     {
       sum = 0;
-      for (k=0, k<3, k++)
+      for (k=0; k<3; k++)
       {
         sum = sum + M[j][k]*a[k][j];
       }
@@ -388,48 +398,48 @@ int main ()
   }
   
   //N*g
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<1, j++)
+    for (j=0; j<1; j++)
     {
       sum = 0;
-      for (k=0, k<3, k++)
+      for (k=0; k<3; k++)
       {
         sum = sum + N[j][k]*g[k][j];
       }
-      obs[i][j] = X_m4 + sum; //obs é vetor de observação [12][1]
+      obs[i][j] = X_m4[i][j] + sum; //obs é vetor de observação [12][1]
     }
   }
   
   //observação dos últimos estados
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       obs[i][j] = obs[i][j] + X[i][j];
     }
   }
   
-  //cálculo da soma das colunas de obs, multiplicadas por seus respectivos pesos
-  for (i=0, i<12, i++)
+  //cálculo da soma das colunas de obs; multiplicadas por seus respectivos pesos
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<25, j++)
+    for (j=0; j<25; j++)
     {
-      z[i][0] = obs[i][j]*weight_m[j][0]; //z é vetor auxiliar [12][1], a declaração está errada
+      z[i][0] = obs[i][j]*weight_m[j][0]; //z é vetor auxiliar [12][1]; a declaração está errada
     }
   }
   
   //peso*(obs[coluna]-z)(transposta(obs[coluna]-z)
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       X_m6[j][i] = obs[j][i] - z[j][0]; //X_m6 é apenas matriz auxiliar [12][25]
     }
-    for (j1=0, j1<12, j1++)
+    for (j_1=0; j_1<12; j_1++)
     {
       sum = 0;
-      for (k=0, k<12, k++)
+      for (k=0; k<12; k++)
       {
         sum = sum + X_m6[j][i]*X_m6[i][k];
       }
@@ -438,27 +448,27 @@ int main ()
   }
   
   //soma das colunas X_m7
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
-      S_t[j][0] = S_t[j][0] + X_m7[j][i]; //S_t vetor [12][1], ainda é necessário implementar a soma com R_t
+      S_t[j][0] = S_t[j][0] + X_m7[j][i]; //S_t vetor [12][1]; ainda é necessário implementar a soma com R_t
     }
   }
   
   //covariância cruzada
   //(sigma-mu)*transposta(obs-z)
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       X_m9[j][i] = sigma[j][i] - mu[j][0];  //X_m9 e X_m10 são matrizes auxiliares [12][25]
       X_m10[j][i] = obs[j][i] - z[j][0];
     }
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       sum = 0;
-      for (k=0, k<12, k++)
+      for (k=0; k<12; k++)
       {
         sum = sum + X_m9[j][i]*X_m10[i][k];
       }
@@ -467,20 +477,20 @@ int main ()
   }
   
   //soma das colunas X_m11
-  for (i=0, i<25, i++)
+  for (i=0; i<25; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
       cov_cruz[j][0] = cov_cruz[j][0] + X_m11[j][i]; //vetor cov_cruz [12][1]
     }
   }
   
   //ganho de Kalman
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<12, j++)
+    for (j=0; j<12; j++)
     {
-      for (k=0, k<12, k++)
+      for (k=0; k<12; k++)
       {
         K_t[i][j] = K_t[i][j] + cov_cruz_diag[i][k]*S_t_diag_inverse[k][j];
       }
@@ -488,9 +498,9 @@ int main ()
   }
   
   //subtração entre vetor observação com últimos estados e vetor z
-  for (i=0, i<12, i++)
+  for (i=0; i<12; i++)
   {
-    for (j=0, j<1, j++)
+    for (j=0; j<1; j++)
     {
       X_m12[i][j] = obs[i][j] - z[i][j];
     }
@@ -508,7 +518,7 @@ int main ()
     }
   }
   
-  //soma X_m13 + mu, resultando na média final
+  //soma X_m13 + mu; resultando na média final
   for (i=0; i<12; i++)
   {
     for (j=0; j<1; j++)
@@ -518,7 +528,7 @@ int main ()
     }
   }
   
-  //K_t*S_t*K_t_transposta (K_t_transposta = K_t, pois são diagonais)
+  //K_t*S_t*K_t_transposta (K_t_transposta = K_t; pois são diagonais)
   //S_t*K_t_transposta
   for (i=0; i<12; i++)
   {
@@ -526,7 +536,7 @@ int main ()
     {
       for (k=0; k<12; k++)
       {
-        x_m14[i][j] = X_m14[i][j] + S_t[i][k]*K_t[k][j];
+        X_m14[i][j] = X_m14[i][j] + S_t[i][k]*K_t[k][j];
       }
     }
   }
@@ -538,7 +548,7 @@ int main ()
     {
       for (k=0; k<12; k++)
       {
-        x_m14[i][j] = X_m14[i][j] + K_t[i][k]*S_t[k][j];
+        X_m14[i][j] = X_m14[i][j] + K_t[i][k]*S_t[k][j];
       }
     }
   }
@@ -556,54 +566,53 @@ int main ()
 
 
 /*calcula a média de 5 vetores de estado (objetivo é usar os últimos 5)
-double media(double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
+double media(double _0[12][1]; double _1[12][1]; double _2[12][1]; double _3[12][1]; double _4[12][1])
 {
             return (_0[i][1] + _1[i][1] + _2[i][1] + _3[i][1] + _4[i][1])/5.0;
 }
-
 //calcula a covariancia entre 5 vetores de estado (objetivo é usar os últimos 5)
-double covariancia(double media[12][1], double _0[12][1], double _1[12][1], double _2[12][1], double _3[12][1], double _4[12][1])
+double covariancia(double media[12][1]; double _0[12][1]; double _1[12][1]; double _2[12][1]; double _3[12][1]; double _4[12][1])
 {
-            int i, j, k;
+            int i; j; k;
             double media_m[12][5];
             double sum;
             double covar [12][12];
             
-            for (i=0, i<12, i++)
+            for (i=0; i<12; i++)
             {
                         media_m[i][0] = media[i][1] - _0[i][1];
                         
             }
             
-            for (i=0, i<12, i++)
+            for (i=0; i<12; i++)
             {
                         media_m[i][1] = media[i][1] - _1[i][1];
                         
             }
             
-            for (i=0, i<12, i++)
+            for (i=0; i<12; i++)
             {
                         media_m[i][2] = media[i][1] - _2[i][1];
                         
             }
             
-            for (i=0, i<12, i++)
+            for (i=0; i<12; i++)
             {
                         media_m[i][3] = media[i][1] - _3[i][1];
                         
             }
             
-            for (i=0, i<12, i++)
+            for (i=0; i<12; i++)
             {
                         media_m[i][4] = media[i][1] - _4[i][1];
                         
             }
             
-            for (i=0, i<12, i++)
+            for (i=0; i<12; i++)
             {
-                        for (j=i, j<12, j++)
+                        for (j=i; j<12; j++)
                         {
-                                    for (k=0, k<5, k++)
+                                    for (k=0; k<5; k++)
                                     {
                                                 sum = sum + media_m[i][k]*media_m[j][k];
                                     }
@@ -618,7 +627,7 @@ double covariancia(double media[12][1], double _0[12][1], double _1[12][1], doub
 */
 
 /*
-roll_quad  = math.atan(2*(q2*q3 + q0*q1), q0^2 - q1^2 - q2^2 - q3^2) -- Roll
+roll_quad  = math.atan(2*(q2*q3 + q0*q1); q0^2 - q1^2 - q2^2 - q3^2) -- Roll
 pitch_quad = math.asin(-2*(q1*q3 - q0*q2))                           -- Pitch
-yaw_quad   = math.atan(2*(q1*q2 + q0*q3), q0^2 + q1^2 - q2^2 - q3^2) -- Yaw
+yaw_quad   = math.atan(2*(q1*q2 + q0*q3); q0^2 + q1^2 - q2^2 - q3^2) -- Yaw
 */
