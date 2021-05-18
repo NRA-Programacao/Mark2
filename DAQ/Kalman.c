@@ -9,16 +9,30 @@
 //COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
 //COLOCAR PONTO E VÍRGULA ENTRE ARGUMENTOS DE FOR E COLOCAR . FLUTUANTE NAS MATRIZES DE DOUBLE DECLARADAS
 
-#include <stdio.h>
-#include <math.h>
-#include <bits/stdc++.h>
+//#include <stdio.h>
+//#include <math.h>
+//#include <bits/stdc++.h>
+include <iostream>
+#include <fstream>
+#include <cstdlib>
+#include <cmath>
+//#include <bits/stdc++.h>
 
 using namespace std;
+
+// Declaração só para testes, os dados virão de  outro código:
+double ax, ay, az;
+double gx, gy, gz;
+double mx, my, mz;
+double x = 0.0, y = 0.0, ze = 0.0, r = 0.0, p = 0.0, ya = 0.0;
+double vx, vy, vz, vr, vp, vya;
+double accx, accy, accz, accr, accp, accya;
+
 
 //pontos sigma
 double t; //intervalo de tempo do filtro de Kalman
 double alfa = 1e-3, ki = 0, lambda = 0;
-int beta = 2, n = 12, i, j, j1, k;
+int beta = 2, n = 12, i, j, j_1, k;
 double mu[12][1] = {{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0}}; //vetor média de cada estado
 double mu_0[12][1] = {{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0}}; //vetor média de cada estado no passo anterior
 
@@ -41,17 +55,17 @@ double X_m12[12][1]; //vetor auxiliar, armazena obs-z
 double X_m13[12][1]; //vetor auxiliar, armazena K_t*X_m12
 double mu_f[12][1]; //vetor de média ao final do ciclo de Kalman
 double X_m14[12][12]; //matriz auxiliar, armazena K_t*S_t*K_t_transposta
-double X_m15{12][1] = {{X_m14[0][0]}, {X_m14[1][1}, {X_m14[2][2]}, {X_m14[3][3]}, {X_m14[4][4]}, {X_m14[5][5]}, {X_m14[6][6]}, {X_m14[7][7]}, {X_m14[8][8]}, {X_m14[9][9]}, {X_m14[10][10]}, {X_m14[11][11]}}; //vetor auxiliar, armazena 
+double X_m15[12][1] = {{X_m14[0][0]}, {X_m14[1][1]}, {X_m14[2][2]}, {X_m14[3][3]}, {X_m14[4][4]}, {X_m14[5][5]}, {X_m14[6][6]}, {X_m14[7][7]}, {X_m14[8][8]}, {X_m14[9][9]}, {X_m14[10][10]}, {X_m14[11][11]}}; //vetor auxiliar, armazena 
 
 double a[3][0]; //acelerações medidas (R*(ac-gr))
 
 double ac[3][1] = {{ax}, {ay}, {az}};  //acelerômetro
-double g[3][1] = {{gx}, {gy}, {gz}};  //giroscópio
+double gi[3][1] = {{gx}, {gy}, {gz}};  //giroscópio
 double m[3][1] = {{mx}, {my}, {mz},}; //magnetômetro
 
-double R[3][3] = {{cos(mx)cos(mz), sin(mx)sin(my)cos(mz)-cos(mx)sin(mz), cos(mx)sin(my)cos(mz)+sin(mx)sin(mz)}, //Earth-fixed to body frame
-                  {sin(my)sin(mz), sin(mx)sin(my)sin(mz)+cos(mx)cos(mz), cos(mx)sin(my)sin(mz)-sin(mx)cos(mz)}, 
-                  {-sin(my), sin(mx)cos(my), cos(mx)cos(my)}}; 
+double R[3][3] = {{cos(mx)*cos(mz), sin(mx)*sin(my)*cos(mz)-cos(mx)*sin(mz), cos(mx)*sin(my)*cos(mz)+sin(mx)*sin(mz)}, //Earth-fixed to body frame
+                  {sin(my)*sin(mz), sin(mx)*sin(my)*sin(mz)+cos(mx)*cos(mz), cos(mx)*sin(my)*sin(mz)-sin(mx)*cos(mz)}, 
+                  {-sin(my), sin(mx)*cos(my), cos(mx)*cos(my)}}; 
 
 double gr[3][1] = {{0.0}, {0.0}, {-9.81}}; //vetor gravidade 
 
@@ -81,7 +95,7 @@ double N[12][3] = {{0.0, 0.0, 0.0}, //matriz giroscópio
                    {0.0, 1.0, 0.0},
                    {0.0, 0.0, 1.0}}; 
             
-double X[12][1] = {{x}, {y}, {z}, {r}, {p}, {ya}, {vx}, {vy}, {vz}, {vr}, {vp}, {vya}} = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor de estados
+double X[12][1] = {{x}, {y}, {ze}, {r}, {p}, {ya}, {vx}, {vy}, {vz}, {vr}, {vp}, {vya}}; //vetor de estados
 
 double A[12][12] = {{1.0, 0.0, 0.0, 0.0, 0.0, 0.0, t, 0.0, 0.0, 0.0, 0.0, 0.0}, //matriz de estados
                     {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, t, 0.0, 0.0, 0.0, 0.0,}, 
@@ -98,18 +112,18 @@ double A[12][12] = {{1.0, 0.0, 0.0, 0.0, 0.0, 0.0, t, 0.0, 0.0, 0.0, 0.0, 0.0}, 
 
 double u[6][1] = {{accx}, {accy}, {accz}, {accr}, {accp}, {accya}}; //vetor de controle
 
-double B[12][6] = {{t*t/2 0 0 0 0 0}, //matriz de controle
-                   {0 t*t/2 0 0 0 0}, 
-                   {0 0 t*t/2 0 0 0}, 
-                   {0 0 0 t*t/2 0 0}, 
-                   {0 0 0 0 t*t/2 0}, 
-                   {0 0 0 0 0 t*t/2}, 
-                   {t 0 0 0 0 0}, 
-                   {0 t 0 0 0 0}, 
-                   {0 0 t 0 0 0}, 
-                   {0 0 0 t 0 0},
-                   {0 0 0 0 t 0}, 
-                   {0 0 0 0 0 t}};
+double B[12][6] = {{t*t/2, 0, 0, 0, 0, 0}, //matriz de controle
+                   {0, t*t/2, 0, 0, 0, 0}, 
+                   {0, 0, t*t/2, 0, 0, 0}, 
+                   {0, 0, 0, t*t/2, 0, 0}, 
+                   {0, 0, 0, 0, t*t/2, 0}, 
+                   {0, 0, 0, 0, 0, t*t/2}, 
+                   {t, 0, 0, 0, 0, 0}, 
+                   {0, t, 0, 0, 0, 0}, 
+                   {0, 0, t, 0, 0, 0}, 
+                   {0, 0, 0, t, 0, 0},
+                   {0, 0, 0, 0, t, 0}, 
+                   {0, 0, 0, 0, 0, t}};
 
 double lower[12][12]; //para decomposição de Cholesky
 
@@ -159,6 +173,7 @@ double cov_cruz_diag[12][12] = {{cov_cruz[0][0], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0
                                 {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[9][0], 0.0, 0.0},
                                 {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[10][0], 0.0},
                                 {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, cov_cruz[11][0]}};
+
 
 double K_t[12][12];
 double K_t_transp[12][12];
