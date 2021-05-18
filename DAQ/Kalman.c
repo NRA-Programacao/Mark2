@@ -19,8 +19,8 @@ using namespace std;
 double t; //intervalo de tempo do filtro de Kalman
 double alfa = 1e-3, ki = 0, lambda = 0;
 int beta = 2, n = 12, i, j, j1, k;
-double mu[12][1] = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor média de cada estado
-double mu_0[12][1] ={{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor média de cada estado no passo anterior
+double mu[12][1] = {{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0}}; //vetor média de cada estado
+double mu_0[12][1] = {{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0},{0.0}}; //vetor média de cada estado no passo anterior
 
 double X_m0[12][25]; //matriz auxiliar, armazena f[coluna]-mu
 double X_m1[25][12]; //matriz auxiliar de covariância (prediction step)
@@ -53,39 +53,39 @@ double R[3][3] = {{cos(mx)cos(mz), sin(mx)sin(my)cos(mz)-cos(mx)sin(mz), cos(mx)
                   {sin(my)sin(mz), sin(mx)sin(my)sin(mz)+cos(mx)cos(mz), cos(mx)sin(my)sin(mz)-sin(mx)cos(mz)}, 
                   {-sin(my), sin(mx)cos(my), cos(mx)cos(my)}}; 
 
-double gr[3][1] = {{0}, {0}, {-9.81}}; //vetor gravidade 
+double gr[3][1] = {{0.0}, {0.0}, {-9.81}}; //vetor gravidade 
 
-double M[12][3] = {{t*t/2, 0, 0}, //matriz acelerômetro
-                   {0, t*t/2, 0}, 
-                   {0, 0, t*t/2}, 
-                   {0, 0, 0}, 
-                   {0, 0, 0}, 
-                   {0, 0, 0},
-                   {t, 0, 0},
-                   {0, t, 0},
-                   {0, 0, t}, 
-                   {0, 0, 0}, 
-                   {0, 0, 0}, 
-                   {0, 0, 0}}; 
+double M[12][3] = {{t*t/2, 0.0, 0.0}, //matriz acelerômetro
+                   {0.0, t*t/2, 0.0}, 
+                   {0.0, 0.0, t*t/2}, 
+                   {0.0, 0.0, 0.0}, 
+                   {0.0, 0.0, 0.0},
+                   {0.0, 0.0, 0.0},
+                   {t, 0.0, 0.0},
+                   {0.0, t, 0.0},
+                   {0.0, 0.0, t}, 
+                   {0.0, 0.0, 0.0},
+                   {0.0, 0.0, 0.0},
+                   {0.0, 0.0, 0.0}}; 
 
-double N[12][3] = {{0, 0, 0}, //matriz giroscópio
-                   {0, 0, 0}, 
-                   {0, 0, 0},
+double N[12][3] = {{0.0, 0.0, 0.0}, //matriz giroscópio
+                   {0.0, 0.0, 0.0},
+                   {0.0, 0.0, 0.0},
                    {t, 0, 0},
                    {0, t, 0}, 
                    {0, 0, t}, 
-                   {0, 0, 0},
-                   {0, 0, 0}, 
-                   {0, 0, 0},
-                   {1, 0, 0},
-                   {0, 1, 0},
-                   {0, 0, 1}}; 
+                   {0.0, 0.0, 0.0},
+                   {0.0, 0.0, 0.0},
+                   {0.0, 0.0, 0.0},
+                   {1.0, 0.0, 0.0},
+                   {0.0, 1.0, 0.0},
+                   {0.0, 0.0, 1.0}}; 
             
 double X[12][1] = {{x}, {y}, {z}, {r}, {p}, {ya}, {vx}, {vy}, {vz}, {vr}, {vp}, {vya}} = {{0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}, {0}}; //vetor de estados
 
-double A[12][12] = {{1, 0, 0, 0, 0, 0, t, 0, 0, 0, 0, 0}, //matriz de estados
-                    {0, 1, 0, 0, 0, 0, 0, t, 0, 0, 0, 0}, 
-                    {0, 0, 1, 0, 0, 0, 0, 0, t, 0, 0, 0},
+double A[12][12] = {{1.0, 0.0, 0.0, 0.0, 0.0, 0.0, t, 0.0, 0.0, 0.0, 0.0, 0.0}, //matriz de estados
+                    {0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, t, 0.0, 0.0, 0.0, 0.0,}, 
+                    {0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, t, 0.0, 0.0, 0.0,},
                     {0, 0, 0, 1, 0, 0, 0, 0, 0, t, 0, 0}, 
                     {0, 0, 0, 0, 1, 0, 0, 0, 0, 0, t, 0},
                     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, t}, 
