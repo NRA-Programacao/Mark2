@@ -249,9 +249,9 @@ for(int i=0; i<4; i++)
     F[2] = F[2] + F_m[i];
   }
 U_h = F[2];
-U_phi = (F_m[2] - F_m[4])*l_m;
-U_theta = (F_m[3] - F_m[1])*l_m;
-U_psi = F_m[1] + F_m[3] - F_m[2] - F_m[4];
+U_phi = (F_m[1] - F_m[3])*l_m;
+U_theta = (F_m[2] - F_m[0])*l_m;
+U_psi = F_m[0] + F_m[2] - F_m[1] - F_m[3];
 	
 //acelerações
 accx = U_h*(sin(psi)*sin(phi)+cos(psi)*sin(theta)*cos(phi))/m;
