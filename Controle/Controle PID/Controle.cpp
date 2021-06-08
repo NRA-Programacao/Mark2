@@ -1,13 +1,8 @@
-#include <iostream>
-#include <time.h>
+nclude <time.h>
 #include <math.h>
 #include "marcos.h"
-
-using namespace std;
-
 void sysCall_actuation()
 {
-	
 	float *targetPos;
     //~ -- Attitude 'Sensing' from Compass and qASGD scripts:
     //~ --yaw_quad = sim.getFloatSignal("ZCompassLP")  -- in radians, [-pi,pi], Yaw from ZCompassLP
@@ -16,6 +11,7 @@ void sysCall_actuation()
 
     //~ -- Vertical control:
     float dummy_array[3] = {0.0, 0.0, 0.0};
+    float vel_z, vel_roll, vel_pitch, vel_yaw;
     targetPos = getObjectPosition(targetObj, dummy_array);
     //~ --pos=sim.getObjectPosition(d,-1)
     float *l; //= getVelocity(heli);//problema da daq
@@ -35,7 +31,7 @@ void sysCall_actuation()
     float rotCorr = yaw_error*0.1 + 2*(yaw_error - yaw_error_last);
     yaw_error_last = yaw_error;
 
-//~ -- Horizontal control: 
+	//~ -- Horizontal control: 
     float *posError = getObjectPosition(targetObj, drone_pos);
     
     float alphaE = p2tau[0];
@@ -52,13 +48,17 @@ void sysCall_actuation()
     betaCorr = betaCorr - (posKp*posError[0] + posKd*(posError[0]-posErrorX_last) + posKi*integradorX);
     posErrorY_last = posError[1];
     posErrorX_last = posError[0];
-    
-    
+	
+    vel_z = thrust;
+	vel_roll = betaCorr;
+	vel_pitch = alphaCorr;
+	vel_yaw = rotCorr;
+	
     //~ -- Actuation: Decide of the motor velocities:
-    particlesTargetVelocities[0]=thrust*(1-alphaCorr+betaCorr+rotCorr);
-    particlesTargetVelocities[1]=thrust*(1-alphaCorr-betaCorr-rotCorr);
-    particlesTargetVelocities[2]=thrust*(1+alphaCorr-betaCorr+rotCorr);
-    particlesTargetVelocities[3]=thrust*(1+alphaCorr+betaCorr-rotCorr);
+    // particlesTargetVelocities[0]=thrust*(1-alphaCorr+betaCorr+rotCorr);
+    // particlesTargetVelocities[1]=thrust*(1-alphaCorr-betaCorr-rotCorr);
+    // particlesTargetVelocities[2]=thrust*(1+alphaCorr-betaCorr+rotCorr);
+    // particlesTargetVelocities[3]=thrust*(1+alphaCorr+betaCorr-rotCorr);
     
     //~ -- Send the desired motor velocities to the 4 rotors:
     //~ for i=1,4,1 do
@@ -92,9 +92,11 @@ void P2Controller()
         qErr[2] = -qErr[2];
     }
     //~ -- eq. 21:
+    //erro de velocidade angular
     for(int i=0; i<3; i++)
     {
         p2tau[i] = -KwP2Controller*angVel[i] - KqP2Controller*qErr[i];
     }
 
 }
+
