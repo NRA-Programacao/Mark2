@@ -1,6 +1,4 @@
-  
 #include <iostream>
-#include <math.h>
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
@@ -8,6 +6,7 @@
 #include <stdio.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Pose2D.h>
+#include <geometry_msgs/Vector3.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 
