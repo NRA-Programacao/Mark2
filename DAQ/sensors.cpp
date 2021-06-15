@@ -13,12 +13,23 @@
 
 using namespace std;
 
-float pos_z; // altura do drone baseado no sensor ultrassonico
+class sensores
+{
+public:
+  double z; // altura do drone baseado no sensor ultrassonico
+  double mx, my, mz; //resposta do magnetometro 
 
 void callback_sonar(const sensor_msgs::Range &h)
   {
-    pos_z = h.range;
+    z = h.range;
   }
+void callback_magnetic(const geometry_msgs::Vector3 &mag_field)
+  {
+    mx = mag_field.y;
+    my = mag_field.x;
+    mz = mag_field.z;
+  }
+};
 
 int main(int argc, char **argv)
 {
@@ -38,3 +49,4 @@ int main(int argc, char **argv)
   geometry_msgs::Twist twist;
   std_msgs::Bool centralizeQRcode;
   
+}
