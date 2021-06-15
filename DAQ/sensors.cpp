@@ -23,11 +23,11 @@ void callback_sonar(const sensor_msgs::Range &h)
   {
     z = h.range;
   }
-void callback_magnetic(const geometry_msgs::Vector3 &mag_field)
+void callback_magnetic(const geometry_msgs::Vector3 &angulo)
   {
-    mx = mag_field.y;
-    my = mag_field.x;
-    mz = mag_field.z;
+    mx = angulo.y;
+    my = angulo.x;
+    mz = angulo.z;
   }
 };
 
