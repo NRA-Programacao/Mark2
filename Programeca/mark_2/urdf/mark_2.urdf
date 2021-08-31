@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="mark_2">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.0157561779125294 0.0169557684665432 -0.0135297771464537"
+        rpy="0 0 0" />
+      <mass
+        value="1.33564201756033" />
+      <inertia
+        ixx="0.00618039435380199"
+        ixy="-2.45149334341306E-06"
+        ixz="2.02898307066139E-07"
+        iyy="0.00550369114109765"
+        iyz="-3.82082974915117E-07"
+        izz="0.00994613965190354" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.188235294117647 0.188235294117647 0.188235294117647 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="Link1">
+    <inertial>
+      <origin
+        xyz="0.00500000631367845 0.00513631013261583 0.00379998650745414"
+        rpy="0 0 0" />
+      <mass
+        value="0.00658310642453608" />
+      <inertia
+        ixx="2.90735946462185E-05"
+        ixy="1.10606097992315E-13"
+        ixz="4.22474465726563E-06"
+        iyy="2.9882417633324E-05"
+        iyz="-1.32190236977769E-13"
+        izz="8.58411525056055E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0 0.690196078431373 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="helice1"
+    type="revolute">
+    <origin
+      xyz="-0.21411 -0.053124 -0.1835"
+      rpy="-3.1416 0.07212 -3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link1" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link2">
+    <inertial>
+      <origin
+        xyz="0.00500000639695575 0.00513624293030152 0.00379998603601131"
+        rpy="0 0 0" />
+      <mass
+        value="0.00658321201338407" />
+      <inertia
+        ixx="2.90736492330161E-05"
+        ixy="1.1123316437468E-13"
+        ixz="4.22477041309329E-06"
+        iyy="2.98824816431131E-05"
+        iyz="-1.38380462043476E-13"
+        izz="8.58424373172818E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0 0.690196078431373 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="helice2"
+    type="revolute">
+    <origin
+      xyz="0.19223 -0.053124 -0.19195"
+      rpy="-3.1416 -1.4046 3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link2" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link3">
+    <inertial>
+      <origin
+        xyz="0.00500000368172962 0.00513630554583948 0.00379999975113826"
+        rpy="0 0 0" />
+      <mass
+        value="0.00658311377877217" />
+      <inertia
+        ixx="2.90735882667547E-05"
+        ixy="8.5316424541273E-14"
+        ixz="4.22474417013195E-06"
+        iyy="2.98824113539954E-05"
+        iyz="-7.62849179809664E-15"
+        izz="8.58411836546445E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0 0.690196078431373 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="helice3"
+    type="revolute">
+    <origin
+      xyz="0.18304 -0.053124 0.21816"
+      rpy="0 -0.09735 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link3" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="Link4">
+    <inertial>
+      <origin
+        xyz="0.00500000639619658 0.00513624292126846 0.00379998604308254"
+        rpy="0 0 0" />
+      <mass
+        value="0.00658321204909001" />
+      <inertia
+        ixx="2.90736495575995E-05"
+        ixy="1.11247003430512E-13"
+        ixz="4.22477048858704E-06"
+        iyy="2.98824819853732E-05"
+        iyz="-1.38349401817883E-13"
+        izz="8.5842439102053E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0 0.690196078431373 0 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://mark_2/meshes/Link4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="helice4"
+    type="revolute">
+    <origin
+      xyz="-0.22339 -0.053124 0.22674"
+      rpy="0 1.407 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="Link4" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>
